@@ -8,11 +8,13 @@ Change task displayed with the numbers from 1 to 6.<br>
 
 ### Task 2
 
+### Task 4
+
 Switch between displayed formula with keys Q and W.<br>
 
-### Task 3
+Switch between Counter-clockwize/ Clockwize and Scale-size for task4 with Z and X.<br>
 
-### Task 4
+### Task 3
 
 ### Task 5
 
