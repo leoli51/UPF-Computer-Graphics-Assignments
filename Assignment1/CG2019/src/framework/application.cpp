@@ -14,6 +14,7 @@ int app_state = 1;
 int formula_shown = 0;
 int image_control = 0;
 int angle = 0; // for task4
+int anitime = 0; // for task5
 
 
 // task 3 variables 
@@ -26,6 +27,7 @@ int angle = 0; // for task4
 
 Image task4;
 Image smalltask4;
+Image task5;
 
 Application::Application(const char* caption, int width, int height)
 {
@@ -56,6 +58,21 @@ void Application::init(void)
 	smalltask4.loadTGA("../res/task4.tga");
 	smalltask4.scale(window_width / 5, window_height / 5);
 	smalltask4.flipY();
+
+	// task 5
+	task5.resize(window_width*3, window_height*3);
+	for (unsigned int x = 0; x < task5.width; x++)
+	{
+
+		for (unsigned int y = 0; y < task5.height; y++)
+		{
+			float plotdecide = randomValue();
+			if (plotdecide <= 0.01)
+			{
+				task5.setPixel(x, y, Color::WHITE);
+			}
+		}
+	}
 
 	//here add your init stuff
 }
@@ -131,8 +148,6 @@ void Application::render(Image& framebuffer)
 		{
 			if (image_control == 0) // orginal size
 			{
-				framebuffer.fill(Color::BLACK);
-
 				for (unsigned int x = 0; x < window_width / 1; x++)
 				{
 					for (unsigned int y = 0; y < window_height / 1; y++)
@@ -142,9 +157,7 @@ void Application::render(Image& framebuffer)
 				}
 			}
 			else if (image_control == 1) //zoom out
-			{ 
-				framebuffer.fill(Color::BLACK);
-
+			{
 				for (unsigned int x = 0; x < window_width; x++)
 				{
 					for (unsigned int y = 0; y < window_height; y++)
@@ -155,8 +168,6 @@ void Application::render(Image& framebuffer)
 			}
 			else //zoom in
 			{
-				framebuffer.fill(Color::BLACK);
-
 				for (unsigned int x = 0; x < window_width; x++)
 				{
 					for (unsigned int y = 0; y < window_height; y++)
@@ -166,6 +177,21 @@ void Application::render(Image& framebuffer)
 				}
 			}
 		}
+		break;
+	}
+	case 5: { // task5
+			anitime ++;
+			for (int x = 0; x < window_width; x++)
+			{
+				for (int y = 0; y < window_height; y++)
+				{
+					framebuffer.setPixel(x, y, task5.getPixelSafe(x + anitime*10, y + anitime*10));
+				}
+			}
+			Sleep(100);
+
+		
+		break;
 	}
 		  // and so on
 	}
@@ -178,6 +204,14 @@ void Application::update(double seconds_elapsed)
 	case 1: // task 1
 		break;
 	case 2: { // task 2 
+		break;
+	}
+	case 4: { // task4
+		break;
+	}
+	case 5: { // task5
+		seconds_elapsed = anitime;
+		break;
 	}
 		  // and so on
 	}
