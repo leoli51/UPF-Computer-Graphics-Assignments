@@ -1,8 +1,6 @@
 #include "application.h"
 #include "utils.h"
 #include "image.h"
-//#include <dos.h>  
-
 
 // *** global variables
 // variable tells which assignment is drawing on the screen
@@ -26,6 +24,8 @@ Image task4;
 Image smalltask4;
 
 // task 5 variables 
+Image task5;
+int anitime = 0; 
 
 // task 6 variables
 Image toolbar;
@@ -73,6 +73,17 @@ void Application::init(void)
 	smalltask4.scale(window_width / 5, window_height / 5);
 	smalltask4.flipY();
 
+	// task 5
+	task5.resize(window_width*3, window_height*3);
+	for (unsigned int x = 0; x < task5.width; x++){
+		for (unsigned int y = 0; y < task5.height; y++){
+			float plotdecide = randomValue();
+			if (plotdecide <= 0.01){
+				task5.setPixel(x, y, Color::WHITE);
+			}
+		}
+	}
+
 	// loading the toolbar 
 	toolbar.loadTGA("./toolbar.tga");
 	canvas.resize(window_width, window_height);
@@ -87,161 +98,169 @@ void Application::render(Image& framebuffer)
 	framebuffer.fill(Color::BLACK);
 
 	switch (app_state) {
-	case 1: { // task 1
-		int w = framebuffer.width;
-		int h = framebuffer.height;
-		framebuffer.drawCircle(w / 10, h / 10, w / 10, Color::YELLOW);
-		break;
-	}
-	case 2: { // task 2
-		float radius = (framebuffer.height * framebuffer.height); //+ framebuffer.width * framebuffer.width); 
-		for (int x = 0; x < framebuffer.width; x++)
-			for (int y = 0; y < framebuffer.height; y++)
-				if (formula_shown == 0) {
-					int nx = x - framebuffer.width / 2;
-					int ny = y - framebuffer.height / 2;
-					Color c = Color::lerp(Color::BLACK, Color::WHITE, ((nx * nx) + (ny * ny)) / (radius));
-					framebuffer.setPixel(x, y, c);
-				}
-				else {
-					Color c = Color::lerp(Color::BLUE, Color::RED, ((float)x) / framebuffer.width);
-					framebuffer.setPixel(x, y, c);
-				}
-		break;
-	}
-	case 3: { // task 3
-		if (filter_shown == 0){ // normal image
-			framebuffer = normal_image;
+		case 1: { // task 1
+			int w = framebuffer.width;
+			int h = framebuffer.height;
+			framebuffer.drawCircle(w / 10, h / 10, w / 10, Color::YELLOW);
+			break;
 		}
-		else if (filter_shown == 1){ // grayscale
-			framebuffer = grayscale_image;
+		case 2: { // task 2
+			float radius = (framebuffer.height * framebuffer.height); //+ framebuffer.width * framebuffer.width); 
+			for (int x = 0; x < framebuffer.width; x++)
+				for (int y = 0; y < framebuffer.height; y++)
+					if (formula_shown == 0) {
+						int nx = x - framebuffer.width / 2;
+						int ny = y - framebuffer.height / 2;
+						Color c = Color::lerp(Color::BLACK, Color::WHITE, ((nx * nx) + (ny * ny)) / (radius));
+						framebuffer.setPixel(x, y, c);
+					}
+					else {
+						Color c = Color::lerp(Color::BLUE, Color::RED, ((float)x) / framebuffer.width);
+						framebuffer.setPixel(x, y, c);
+					}
+			break;
 		}
-		else { // channel swap
-			framebuffer = channel_swap_image;
+		case 3: { // task 3
+			if (filter_shown == 0){ // normal image
+				framebuffer = normal_image;
+			}
+			else if (filter_shown == 1){ // grayscale
+				framebuffer = grayscale_image;
+			}
+			else { // channel swap
+				framebuffer = channel_swap_image;
+			}
+			break;
 		}
-		break;
-	}
-	case 4: { // task4
+		case 4: { // task4
 
-		if (formula_shown == 0) //rotate image
-		{
-			if (image_control == 0) //couter-clockwize
+			if (formula_shown == 0) //rotate image
 			{
-				angle++;
-				for (unsigned int x = 0; x < smalltask4.width; x++)
+				if (image_control == 0) //couter-clockwize
 				{
-					for (unsigned int y = 0; y < smalltask4.height; y++)
+					angle++;
+					for (unsigned int x = 0; x < smalltask4.width; x++)
 					{
-						int startx = window_width / 2;
-						int starty = window_height / 2;
-						int newx = x * cos(angle) - y * sin(angle) + startx;
-						int newy = y * cos(angle) + x * sin(angle) + starty;
-						framebuffer.setPixel(newx, newy, smalltask4.getPixel(x, y));
+						for (unsigned int y = 0; y < smalltask4.height; y++)
+						{
+							int startx = window_width / 2;
+							int starty = window_height / 2;
+							int newx = x * cos(angle) - y * sin(angle) + startx;
+							int newy = y * cos(angle) + x * sin(angle) + starty;
+							framebuffer.setPixel(newx, newy, smalltask4.getPixel(x, y));
+						}
+					}
+					//Sleep(300);
+				}
+				else // clockwize
+				{
+					angle--;
+					for (unsigned int x = 0; x < smalltask4.width; x++)
+					{
+						for (unsigned int y = 0; y < smalltask4.height; y++)
+						{
+							int startx = window_width / 2;
+							int starty = window_height / 2;
+							int newx = x * cos(angle) - y * sin(angle) + startx;
+							int newy = y * cos(angle) + x * sin(angle) + starty;
+							framebuffer.setPixel(newx, newy, smalltask4.getPixel(x, y));
+						}
+					}
+					//Sleep(300);
+				}
+			}
+			else // scale image
+			{
+				if (image_control == 0) { // orginal size
+					for (unsigned int x = 0; x < window_width / 1; x++) {
+						for (unsigned int y = 0; y < window_height / 1; y++) {
+							framebuffer.setPixel(x, y, task4.getPixel(x, y));
+						}
 					}
 				}
-				//Sleep(300);
-			}
-			else // clockwize
-			{
-				angle--;
-				for (unsigned int x = 0; x < smalltask4.width; x++)
-				{
-					for (unsigned int y = 0; y < smalltask4.height; y++)
+				else if (image_control == 1) { //zoom out
+					for (unsigned int x = 0; x < window_width; x++)
 					{
-						int startx = window_width / 2;
-						int starty = window_height / 2;
-						int newx = x * cos(angle) - y * sin(angle) + startx;
-						int newy = y * cos(angle) + x * sin(angle) + starty;
-						framebuffer.setPixel(newx, newy, smalltask4.getPixel(x, y));
+						for (unsigned int y = 0; y < window_height; y++)
+						{
+							framebuffer.setPixel(x * 0.1 + window_width * 9 / 20, y * 0.1 + window_height * 9 / 20, task4.getPixel(x, y));
+						}
 					}
 				}
-				//Sleep(300);
+				else //zoom in
+				{
+					for (unsigned int x = 0; x < window_width; x++)
+					{
+						for (unsigned int y = 0; y < window_height; y++)
+						{
+							framebuffer.setPixel(x, y, task4.getPixel(x * 0.1 + window_width * 0.4, y * 0.1 + window_height * 0.4));
+						}
+					}
+				}
 			}
+			break;
 		}
-		else // scale image
-		{
-			if (image_control == 0) // orginal size
+		case 5: { // task5
+			anitime ++;
+			for (int x = 0; x < window_width; x++)
 			{
-				framebuffer.fill(Color::BLACK);
-
-				for (unsigned int x = 0; x < window_width / 1; x++)
+				for (int y = 0; y < window_height; y++)
 				{
-					for (unsigned int y = 0; y < window_height / 1; y++)
-					{
-						framebuffer.setPixel(x, y, task4.getPixel(x, y));
-					}
+					framebuffer.setPixel(x, y, task5.getPixelSafe(x + anitime*10, y + anitime*10));
 				}
 			}
-			else if (image_control == 1) //zoom out
-			{ 
-				framebuffer.fill(Color::BLACK);
-
-				for (unsigned int x = 0; x < window_width; x++)
-				{
-					for (unsigned int y = 0; y < window_height; y++)
-					{
-						framebuffer.setPixel(x * 0.1 + window_width * 9 / 20, y * 0.1 + window_height * 9 / 20, task4.getPixel(x, y));
-					}
-				}
-			}
-			else //zoom in
-			{
-				framebuffer.fill(Color::BLACK);
-
-				for (unsigned int x = 0; x < window_width; x++)
-				{
-					for (unsigned int y = 0; y < window_height; y++)
-					{
-						framebuffer.setPixel(x, y, task4.getPixel(x * 0.1 + window_width * 0.4, y * 0.1 + window_height * 0.4));
-					}
-				}
-			}
+		break;
 		}
-		break;
-	}
-	case 6: { //task 6
-		framebuffer = canvas;
-		for (int xi = 0; xi < toolbar.width; xi++)
-			for (int yi = 0; yi < toolbar.height; yi++)
-				framebuffer.setPixelSafe(xi, framebuffer.height - yi, toolbar.getPixel(xi, yi));
-		break;
-	}
-		  // and so on
+		case 6: { //task 6
+			framebuffer = canvas;
+			for (int xi = 0; xi < toolbar.width; xi++)
+				for (int yi = 0; yi < toolbar.height; yi++)
+					framebuffer.setPixelSafe(xi, framebuffer.height - yi, toolbar.getPixel(xi, yi));
+			// and so on
+		}
 	}
 }
 
 //called after render
-void Application::update(double seconds_elapsed)
-{
+void Application::update(double seconds_elapsed){
 	switch (app_state) {
-	case 6: { // task 6
-		if (mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT)){
-			if (mouse_position.y > window_height - toolbar.height){
-				// check what icon has been clicked
-				if (mouse_position.x < 50)
-					canvas.fill(Color::WHITE);
-				else if (mouse_position.x < 100)
-					canvas.saveTGA("./BeatifulDrawing.tga");
-				else if (mouse_position.x < 500){
-					int cy = 25;
-					int cx = snap(mouse_position.x - 25 , 50.0f) + 25;
-					draw_color = toolbar.getPixel(cx, cy);
+		case 6: { // task 6
+			if (mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT)){
+				if (mouse_position.y > window_height - toolbar.height){
+					// check what icon has been clicked
+					if (mouse_position.x < 50)
+						canvas.fill(Color::WHITE);
+					else if (mouse_position.x < 100)
+						canvas.saveTGA("./BeatifulDrawing.tga");
+					else if (mouse_position.x < 500){
+						int cy = 25;
+						int cx = snap(mouse_position.x - 25 , 50.0f) + 25;
+						draw_color = toolbar.getPixel(cx, cy);
+					}
+					
 				}
-				
+				else {
+					//draw on canvas
+					if (prev_mouse_pos.x != -1 && prev_mouse_pos.y != -1)
+						canvas.drawLine(prev_mouse_pos.x, prev_mouse_pos.y, mouse_position.x, mouse_position.y, draw_color);
+					prev_mouse_pos = mouse_position;
+				}
 			}
-			else {
-				//draw on canvas
-				if (prev_mouse_pos.x != -1 && prev_mouse_pos.y != -1)
-					canvas.drawLine(prev_mouse_pos.x, prev_mouse_pos.y, mouse_position.x, mouse_position.y, draw_color);
-				prev_mouse_pos = mouse_position;
-			}
-			
-		}
-		else 
-			prev_mouse_pos.set(-1, -1);
+			else 
+				prev_mouse_pos.set(-1, -1);
 
-		break;
-		}	
+			break;
+		}
+		case 2: { // task 2 
+			break;
+		}
+		case 4: { // task4
+			break;
+		}
+		case 5: { // task5
+			seconds_elapsed = anitime;
+			break;
+		}
 	}
 	//to see all the keycodes: https://wiki.libsdl.org/SDL_Keycode
 	//if (keystate[SDL_SCANCODE_SPACE]) //if key space is pressed
