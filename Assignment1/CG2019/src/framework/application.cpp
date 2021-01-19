@@ -19,13 +19,13 @@ int filter_shown = 0;
 
 // task 4 variables
 int image_control = 0;
-int angle = 0;
+double angle = 0;
 Image task4;
 Image smalltask4;
 
 // task 5 variables 
 Image task5;
-int anitime = 0; 
+double anitime = 0; 
 
 // task 6 variables
 Image toolbar;
@@ -78,7 +78,7 @@ void Application::init(void)
 	for (unsigned int x = 0; x < task5.width; x++){
 		for (unsigned int y = 0; y < task5.height; y++){
 			float plotdecide = randomValue();
-			if (plotdecide <= 0.01){
+			if (plotdecide <= 0.001){
 				task5.setPixel(x, y, Color::WHITE);
 			}
 		}
@@ -138,7 +138,6 @@ void Application::render(Image& framebuffer)
 			{
 				if (image_control == 0) //couter-clockwize
 				{
-					angle++;
 					for (unsigned int x = 0; x < smalltask4.width; x++)
 					{
 						for (unsigned int y = 0; y < smalltask4.height; y++)
@@ -150,23 +149,21 @@ void Application::render(Image& framebuffer)
 							framebuffer.setPixel(newx, newy, smalltask4.getPixel(x, y));
 						}
 					}
-					//Sleep(300);
+					
 				}
 				else // clockwize
 				{
-					angle--;
 					for (unsigned int x = 0; x < smalltask4.width; x++)
 					{
 						for (unsigned int y = 0; y < smalltask4.height; y++)
 						{
 							int startx = window_width / 2;
 							int starty = window_height / 2;
-							int newx = x * cos(angle) - y * sin(angle) + startx;
-							int newy = y * cos(angle) + x * sin(angle) + starty;
+							int newx = x * cos(angle*-1) - y * sin(angle * -1) + startx;
+							int newy = y * cos(angle * -1) + x * sin(angle * -1) + starty;
 							framebuffer.setPixel(newx, newy, smalltask4.getPixel(x, y));
 						}
 					}
-					//Sleep(300);
 				}
 			}
 			else // scale image
@@ -201,14 +198,17 @@ void Application::render(Image& framebuffer)
 			break;
 		}
 		case 5: { // task5
-			anitime ++;
-			for (int x = 0; x < window_width; x++)
-			{
-				for (int y = 0; y < window_height; y++)
+				for (int x = 0; x < window_width; x++)
 				{
-					framebuffer.setPixel(x, y, task5.getPixelSafe(x + anitime*10, y + anitime*10));
+					for (int y = 0; y < window_height; y++)
+					{
+						if (y + anitime * 50 >= window_height * 3)
+						{
+							anitime = 0;
+						}
+						framebuffer.setPixel(x, y, task5.getPixelSafe(x + anitime * 50, y + anitime * 50));
+					}
 				}
-			}
 		break;
 		}
 		case 6: { //task 6
@@ -255,10 +255,11 @@ void Application::update(double seconds_elapsed){
 			break;
 		}
 		case 4: { // task4
+			angle = seconds_elapsed + angle;
 			break;
 		}
 		case 5: { // task5
-			seconds_elapsed = anitime;
+			anitime = seconds_elapsed + anitime;
 			break;
 		}
 	}
