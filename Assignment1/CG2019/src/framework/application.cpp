@@ -13,7 +13,7 @@ int app_state = 1;
 // task 2 variables
 int formula_shown = 0;
 int image_control = 0;
-int angle = 0;
+int angle = 0; // for task4
 
 
 // task 3 variables 
@@ -54,7 +54,7 @@ void Application::init(void)
 	task4.scale(window_width, window_height);
 	task4.flipY();
 	smalltask4.loadTGA("../res/task4.tga");
-	smalltask4.scale(window_width / 10, window_height / 10);
+	smalltask4.scale(window_width / 5, window_height / 5);
 	smalltask4.flipY();
 
 	//here add your init stuff
@@ -101,7 +101,11 @@ void Application::render(Image& framebuffer)
 				{
 					for (unsigned int y = 0; y < smalltask4.height; y++)
 					{
-						framebuffer.setPixel(x * cos(angle) - y * sin(angle) + window_width * 9 / 20, y * cos(angle) + x * sin(angle) + window_width * 9 / 20, smalltask4.getPixel(x, y));
+						int startx = window_width / 2;
+						int starty = window_height / 2;
+						int newx = x * cos(angle) - y * sin(angle) + startx;
+						int newy = y * cos(angle) + x * sin(angle) + starty;
+						framebuffer.setPixel(newx, newy, smalltask4.getPixel(x, y));
 					}
 				}
 				Sleep(300);
@@ -113,7 +117,11 @@ void Application::render(Image& framebuffer)
 				{
 					for (unsigned int y = 0; y < smalltask4.height; y++)
 					{
-						framebuffer.setPixel(x * cos(angle) - y * sin(angle) + window_width * 9 / 20, y * cos(angle) + x * sin(angle) + window_width * 9 / 20, smalltask4.getPixel(x, y));
+						int startx = window_width / 2;
+						int starty = window_height / 2;
+						int newx = x * cos(angle) - y * sin(angle) + startx;
+						int newy = y * cos(angle) + x * sin(angle) + starty;
+						framebuffer.setPixel(newx, newy, smalltask4.getPixel(x, y));
 					}
 				}
 				Sleep(300);
@@ -137,11 +145,11 @@ void Application::render(Image& framebuffer)
 			else // 1/10 size
 			{
 				framebuffer.fill(Color::BLACK);
-				for (unsigned int x = 0; x < window_width / 10; x++)
+				for (unsigned int x = 0; x < window_width; x++)
 				{
-					for (unsigned int y = 0; y < window_height / 10; y++)
+					for (unsigned int y = 0; y < window_height; y++)
 					{
-						framebuffer.setPixel(x + window_width * 9 / 20, y + window_height * 9 / 20, smalltask4.getPixel(x, y));
+						framebuffer.setPixel(x*0.1 + window_width * 9 / 20, y*0.1 + window_height * 9 / 20, task4.getPixel(x, y));
 					}
 				}
 			}
