@@ -30,6 +30,9 @@ inline unsigned long frand(void) {          //period 2^96-1
 }
 
 inline float randomValue() { return (frand() % 10000) / 10000.0; }
+
+inline float snap(float value, float step) {return std::round(value / step) * step;}
+
 std::string getBinPath();
 
 #endif

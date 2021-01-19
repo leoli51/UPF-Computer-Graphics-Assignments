@@ -1,7 +1,7 @@
 #include "application.h"
 #include "utils.h"
 #include "image.h"
-#include<dos.h>  
+//#include <dos.h>  
 
 
 // *** global variables
@@ -12,20 +12,26 @@ int app_state = 1;
 
 // task 2 variables
 int formula_shown = 0;
-int image_control = 0;
-int angle = 0; // for task4
-
 
 // task 3 variables 
+Image normal_image;
+Image grayscale_image;
+Image channel_swap_image;
+int filter_shown = 0;
 
 // task 4 variables
+int image_control = 0;
+int angle = 0;
+Image task4;
+Image smalltask4;
 
 // task 5 variables 
 
 // task 6 variables
-
-Image task4;
-Image smalltask4;
+Image toolbar;
+Image canvas;
+Vector2 prev_mouse_pos;
+Color draw_color(255,0,0);
 
 Application::Application(const char* caption, int width, int height)
 {
@@ -49,15 +55,29 @@ void Application::init(void)
 {
 	std::cout << "initiating app..." << std::endl;
 
+	//loading mountains.tga
+	normal_image.loadTGA("./mountain.tga");
+	grayscale_image.loadTGA("./mountain.tga");
+	channel_swap_image.loadTGA("./mountain.tga");
+	normal_image.flipY();
+	grayscale_image.flipY();
+	channel_swap_image.flipY();
+	grayscale_image.forEachPixel([](Color c){float rgb = (c.r + c.g + c.b) / 3.0f; return Color(rgb, rgb, rgb);});
+	channel_swap_image.forEachPixel([](Color c){return Color(c.b, c.r, c.g);});
+
 	//loading task4.tga
-	task4.loadTGA("../res/task4.tga");
+	task4.loadTGA("./task4.tga");
 	task4.scale(window_width, window_height);
 	task4.flipY();
-	smalltask4.loadTGA("../res/task4.tga");
+	smalltask4.loadTGA("./task4.tga");
 	smalltask4.scale(window_width / 5, window_height / 5);
 	smalltask4.flipY();
 
-	//here add your init stuff
+	// loading the toolbar 
+	toolbar.loadTGA("./toolbar.tga");
+	canvas.resize(window_width, window_height);
+	canvas.fill(Color::WHITE);
+	prev_mouse_pos.set(-1, -1);
 }
 
 //render one frame
@@ -89,11 +109,22 @@ void Application::render(Image& framebuffer)
 				}
 		break;
 	}
+	case 3: { // task 3
+		if (filter_shown == 0){ // normal image
+			framebuffer = normal_image;
+		}
+		else if (filter_shown == 1){ // grayscale
+			framebuffer = grayscale_image;
+		}
+		else { // channel swap
+			framebuffer = channel_swap_image;
+		}
+		break;
+	}
 	case 4: { // task4
 
 		if (formula_shown == 0) //rotate image
 		{
-
 			if (image_control == 0) //couter-clockwize
 			{
 				angle++;
@@ -108,7 +139,7 @@ void Application::render(Image& framebuffer)
 						framebuffer.setPixel(newx, newy, smalltask4.getPixel(x, y));
 					}
 				}
-				Sleep(300);
+				//Sleep(300);
 			}
 			else // clockwize
 			{
@@ -124,7 +155,7 @@ void Application::render(Image& framebuffer)
 						framebuffer.setPixel(newx, newy, smalltask4.getPixel(x, y));
 					}
 				}
-				Sleep(300);
+				//Sleep(300);
 			}
 		}
 		else // scale image
@@ -166,6 +197,14 @@ void Application::render(Image& framebuffer)
 				}
 			}
 		}
+		break;
+	}
+	case 6: { //task 6
+		framebuffer = canvas;
+		for (int xi = 0; xi < toolbar.width; xi++)
+			for (int yi = 0; yi < toolbar.height; yi++)
+				framebuffer.setPixelSafe(xi, framebuffer.height - yi, toolbar.getPixel(xi, yi));
+		break;
 	}
 		  // and so on
 	}
@@ -175,11 +214,34 @@ void Application::render(Image& framebuffer)
 void Application::update(double seconds_elapsed)
 {
 	switch (app_state) {
-	case 1: // task 1
+	case 6: { // task 6
+		if (mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT)){
+			if (mouse_position.y > window_height - toolbar.height){
+				// check what icon has been clicked
+				if (mouse_position.x < 50)
+					canvas.fill(Color::WHITE);
+				else if (mouse_position.x < 100)
+					canvas.saveTGA("./BeatifulDrawing.tga");
+				else if (mouse_position.x < 500){
+					int cy = 25;
+					int cx = snap(mouse_position.x - 25 , 50.0f) + 25;
+					draw_color = toolbar.getPixel(cx, cy);
+				}
+				
+			}
+			else {
+				//draw on canvas
+				if (prev_mouse_pos.x != -1 && prev_mouse_pos.y != -1)
+					canvas.drawLine(prev_mouse_pos.x, prev_mouse_pos.y, mouse_position.x, mouse_position.y, draw_color);
+				prev_mouse_pos = mouse_position;
+			}
+			
+		}
+		else 
+			prev_mouse_pos.set(-1, -1);
+
 		break;
-	case 2: { // task 2 
-	}
-		  // and so on
+		}	
 	}
 	//to see all the keycodes: https://wiki.libsdl.org/SDL_Keycode
 	//if (keystate[SDL_SCANCODE_SPACE]) //if key space is pressed
@@ -215,9 +277,14 @@ void Application::onKeyDown(SDL_KeyboardEvent event)
 		break;
 	case SDL_SCANCODE_Q:
 		formula_shown = 0;
+		filter_shown = 0;
 		break;
 	case SDL_SCANCODE_W:
 		formula_shown = 1;
+		filter_shown = 1;
+		break;
+	case SDL_SCANCODE_E:
+		filter_shown = 2;
 		break;
 	case SDL_SCANCODE_Z:
 		image_control = 0;
