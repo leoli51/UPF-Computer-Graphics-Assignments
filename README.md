@@ -12,7 +12,8 @@ Change task displayed with the numbers from 1 to 6.<br>
 
 Switch between displayed formula with keys Q and W.<br>
 
-Switch between Counter-clockwize/ Clockwize and Scale-size for task4 with Z and X.<br>
+For task4: Switch between Counter-clockwize/ Clockwize with Z/ X.
+For task4: Switch between Oringal/ 0.1times/ 10times with Z/ X/ C. 
 
 ### Task 3
 

@@ -93,7 +93,7 @@ void Application::render(Image& framebuffer)
 
 		if (formula_shown == 0) //rotate image
 		{
-			
+
 			if (image_control == 0) //couter-clockwize
 			{
 				angle++;
@@ -128,11 +128,10 @@ void Application::render(Image& framebuffer)
 			}
 		}
 		else // scale image
-		{ 
-			if (image_control == 0) //original size
+		{
+			if (image_control == 0) // orginal size
 			{
 				framebuffer.fill(Color::BLACK);
-				//task4.scale(window_width / 1, window_height / 1);
 
 				for (unsigned int x = 0; x < window_width / 1; x++)
 				{
@@ -142,14 +141,27 @@ void Application::render(Image& framebuffer)
 					}
 				}
 			}
-			else // 1/10 size
-			{
+			else if (image_control == 1) //zoom out
+			{ 
 				framebuffer.fill(Color::BLACK);
+
 				for (unsigned int x = 0; x < window_width; x++)
 				{
 					for (unsigned int y = 0; y < window_height; y++)
 					{
-						framebuffer.setPixel(x*0.1 + window_width * 9 / 20, y*0.1 + window_height * 9 / 20, task4.getPixel(x, y));
+						framebuffer.setPixel(x * 0.1 + window_width * 9 / 20, y * 0.1 + window_height * 9 / 20, task4.getPixel(x, y));
+					}
+				}
+			}
+			else //zoom in
+			{
+				framebuffer.fill(Color::BLACK);
+
+				for (unsigned int x = 0; x < window_width; x++)
+				{
+					for (unsigned int y = 0; y < window_height; y++)
+					{
+						framebuffer.setPixel(x, y, task4.getPixel(x * 0.1 + window_width * 0.4, y * 0.1 + window_height * 0.4));
 					}
 				}
 			}
@@ -212,6 +224,9 @@ void Application::onKeyDown(SDL_KeyboardEvent event)
 		break;
 	case SDL_SCANCODE_X:
 		image_control = 1;
+		break;
+	case SDL_SCANCODE_C:
+		image_control = 2;
 		break;
 	}
 }
