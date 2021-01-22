@@ -3,7 +3,7 @@
 #include "image.h"
 
 // *** global variables
-// variable tells which assignment is drawing on the screen
+// variable tells which task is drawing on the screen
 int app_state = 1;
 
 // task 1 variables 
@@ -19,13 +19,33 @@ int filter_shown = 0;
 
 // task 4 variables
 int image_control = 0;
+float rotation_dir = 1;
 double angle = 0;
+float angular_velocity = 2;
+float scale = 1;
+float scale_velocity = 2;
 Image task4;
 Image smalltask4;
 
 // task 5 variables 
-Image task5;
-double anitime = 0; 
+typedef struct {
+	float x, y, vx, vy, ax, ay; // position, velocity and acceleration of particle
+} Particle;
+int num_particles = 1000;
+std::vector<Particle> particles(num_particles); 
+int max_acceleration = 1000;
+int min_acceleration = 100;
+void reset_particle(Particle* p, float x, float y){
+		p->x = x;
+		p->y = y;
+		p->vx = 0;
+		p->vy = 0;
+		float rand_angle = randomValue() * 2 * PI;
+		float rand_acceleration = randomValue() * (max_acceleration - min_acceleration) + min_acceleration;
+		p->ax = std::cos(rand_angle) * rand_acceleration;
+		p->ay = std::sin(rand_angle) * rand_acceleration;
+}
+
 
 // task 6 variables
 Image toolbar;
@@ -73,15 +93,9 @@ void Application::init(void)
 	smalltask4.scale(window_width / 5, window_height / 5);
 	smalltask4.flipY();
 
-	// task 5
-	task5.resize(window_width*3, window_height*3);
-	for (unsigned int x = 0; x < task5.width; x++){
-		for (unsigned int y = 0; y < task5.height; y++){
-			float plotdecide = randomValue();
-			if (plotdecide <= 0.001){
-				task5.setPixel(x, y, Color::WHITE);
-			}
-		}
+	// initializing particles
+	for (int i = 0; i < particles.size(); i++){
+		reset_particle(&(particles[i]), window_width / 2, window_height / 2);
 	}
 
 	// loading the toolbar 
@@ -133,90 +147,27 @@ void Application::render(Image& framebuffer)
 			break;
 		}
 		case 4: { // task4
-
-			if (formula_shown == 0) //rotate image
-			{
-				if (image_control == 0) //couter-clockwize
-				{
-					for (unsigned int x = 0; x < smalltask4.width; x++)
-					{
-						for (unsigned int y = 0; y < smalltask4.height; y++)
-						{
-							int startx = window_width / 2;
-							int starty = window_height / 2;
-							int newx = x * cos(angle) - y * sin(angle) + startx;
-							int newy = y * cos(angle) + x * sin(angle) + starty;
-							framebuffer.setPixel(newx, newy, smalltask4.getPixel(x, y));
-						}
-					}
-					
-				}
-				else // clockwize
-				{
-					for (unsigned int x = 0; x < smalltask4.width; x++)
-					{
-						for (unsigned int y = 0; y < smalltask4.height; y++)
-						{
-							int startx = window_width / 2;
-							int starty = window_height / 2;
-							int newx = x * cos(angle*-1) - y * sin(angle * -1) + startx;
-							int newy = y * cos(angle * -1) + x * sin(angle * -1) + starty;
-							framebuffer.setPixel(newx, newy, smalltask4.getPixel(x, y));
-						}
-					}
-				}
-			}
-			else // scale image
-			{
-				if (image_control == 0) { // orginal size
-					for (unsigned int x = 0; x < window_width / 1; x++) {
-						for (unsigned int y = 0; y < window_height / 1; y++) {
-							framebuffer.setPixel(x, y, task4.getPixel(x, y));
-						}
-					}
-				}
-				else if (image_control == 1) { //zoom out
-					for (unsigned int x = 0; x < window_width; x++)
-					{
-						for (unsigned int y = 0; y < window_height; y++)
-						{
-							framebuffer.setPixel(x * 0.1 + window_width * 9 / 20, y * 0.1 + window_height * 9 / 20, task4.getPixel(x, y));
-						}
-					}
-				}
-				else //zoom in
-				{
-					for (unsigned int x = 0; x < window_width; x++)
-					{
-						for (unsigned int y = 0; y < window_height; y++)
-						{
-							framebuffer.setPixel(x, y, task4.getPixel(x * 0.1 + window_width * 0.4, y * 0.1 + window_height * 0.4));
-						}
-					}
+			for (unsigned int x = 0; x < smalltask4.width; x++){
+				for (unsigned int y = 0; y < smalltask4.height; y++){
+					int startx = window_width / 2;
+					int starty = window_height / 2;
+					int newx = x * cos(angle) - y * sin(angle) + startx;
+					int newy = y * cos(angle) + x * sin(angle) + starty;
+					framebuffer.setPixel(newx, newy, smalltask4.getPixelSafe(x * scale, y * scale));
 				}
 			}
 			break;
 		}
-		case 5: { // task5
-				for (int x = 0; x < window_width; x++)
-				{
-					for (int y = 0; y < window_height; y++)
-					{
-						if (y + anitime * 50 >= window_height * 3)
-						{
-							anitime = 0;
-						}
-						framebuffer.setPixel(x, y, task5.getPixelSafe(x + anitime * 50, y + anitime * 50));
-					}
-				}
-		break;
+		case 5: { // task 5
+			for (Particle p : particles)
+				framebuffer.setPixelSafe(p.x, p.y, Color::WHITE);
+			break;
 		}
 		case 6: { //task 6
 			framebuffer = canvas;
 			for (int xi = 0; xi < toolbar.width; xi++)
 				for (int yi = 0; yi < toolbar.height; yi++)
 					framebuffer.setPixelSafe(xi, framebuffer.height - yi, toolbar.getPixel(xi, yi));
-			// and so on
 		}
 	}
 }
@@ -228,16 +179,18 @@ void Application::update(double seconds_elapsed){
 			if (mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT)){
 				if (mouse_position.y > window_height - toolbar.height){
 					// check what icon has been clicked
-					if (mouse_position.x < 50)
+					if (mouse_position.x < 50) // first icon: clear canvas
 						canvas.fill(Color::WHITE);
-					else if (mouse_position.x < 100)
+					else if (mouse_position.x < 100){ // second icon: save canvas
+						canvas.flipY(); // flip before saving so image gets saved correctly
 						canvas.saveTGA("./BeatifulDrawing.tga");
-					else if (mouse_position.x < 500){
+						canvas.flipY();
+					}
+					else if (mouse_position.x < 500){ // color icons: pick correct icon
 						int cy = 25;
 						int cx = snap(mouse_position.x - 25 , 50.0f) + 25;
 						draw_color = toolbar.getPixel(cx, cy);
 					}
-					
 				}
 				else {
 					//draw on canvas
@@ -251,15 +204,29 @@ void Application::update(double seconds_elapsed){
 
 			break;
 		}
-		case 2: { // task 2 
-			break;
-		}
-		case 4: { // task4
-			angle = seconds_elapsed + angle;
+		case 4: { // task4 use WASD keys to rotate/ scale
+			if (keystate[SDL_SCANCODE_W])
+				scale += seconds_elapsed * scale_velocity;
+			if (keystate[SDL_SCANCODE_S])
+				scale -= seconds_elapsed * scale_velocity;
+			if (keystate[SDL_SCANCODE_A])
+				angle += seconds_elapsed * angular_velocity;
+			if (keystate[SDL_SCANCODE_D])
+				angle -= seconds_elapsed * angular_velocity;
 			break;
 		}
 		case 5: { // task5
-			anitime = seconds_elapsed + anitime;
+			// update particles:
+			Particle* p;
+			for (int i = 0; i < particles.size(); i++)	{
+				p = &particles[i];
+				p->vx += p->ax * seconds_elapsed;
+				p->vy += p->ay * seconds_elapsed;
+				p->x += p->vx * seconds_elapsed;
+				p->y += p->vy * seconds_elapsed;
+				if (p->x < 0 || p->x > window_width || p->y < 0 || p->y > window_height)
+					reset_particle(p, mouse_position.x, mouse_position.y);
+			}
 			break;
 		}
 	}
@@ -296,11 +263,10 @@ void Application::onKeyDown(SDL_KeyboardEvent event)
 		app_state = 6;
 		break;
 	case SDL_SCANCODE_Q:
-		formula_shown = 0;
+		formula_shown = (formula_shown + 1) % 2;
 		filter_shown = 0;
 		break;
 	case SDL_SCANCODE_W:
-		formula_shown = 1;
 		filter_shown = 1;
 		break;
 	case SDL_SCANCODE_E:
