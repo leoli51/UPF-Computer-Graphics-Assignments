@@ -68,6 +68,7 @@ public:
 	void drawRectangle(int x, int y, int w, int h, const Color& color, bool fill);
 	void drawCircle(int x, int y, int r, const Color& color);
 	void drawCircleLines(int x, int y, int r, const Color& color, int segments);
+	void drawCircleLines_Part(int x, int y, int r, float start_angle, float end_angle, const Color& color, int segments);
 	void rotateimage(Image img, int angle);
 
 	//returns a new image with the area from (startx,starty) of size width,height

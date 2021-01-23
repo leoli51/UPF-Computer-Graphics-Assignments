@@ -167,15 +167,31 @@ void Image::drawCircle(int x, int y, int r, const Color& color) {
 }
 
 void Image::drawCircleLines(int x, int y, int r, const Color& color, int segments) {
-	float angle_step = PI / segments;
+	float angle_step = PI * 2 / segments;
 	int pxi = r + x;
 	int pyi = y;
-	for (int i = 1; i < segments; i++) {
+	for (int i = 1; i <= segments; i++) {
 		int xi = r * cos(angle_step * i) + x;
 		int yi = r * sin(angle_step * i) + y;
 		drawLine(pxi, pyi, xi, yi, color);
 		pxi = xi;
 		pyi = yi;
+	}
+}
+
+void Image::drawCircleLines_Part(int x, int y, int r, float start_angle, float end_angle, const Color& color, int segments) {
+	float angle_step = PI * 2 / segments;
+	int pxi = r + x;
+	int pyi = y;
+	for (int i = 1; i <= segments; i++) {
+		if (angle_step * i >= start_angle && angle_step * i <= end_angle)
+		{
+			int xi = r * cos(angle_step * i) + x;
+			int yi = r * sin(angle_step * i) + y;
+			drawLine(pxi, pyi, xi, yi, color);
+			pxi = xi;
+			pyi = yi;
+		}
 	}
 }
 
