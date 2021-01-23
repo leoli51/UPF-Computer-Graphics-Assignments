@@ -113,9 +113,24 @@ void Application::render(Image& framebuffer)
 
 	switch (app_state) {
 		case 1: { // task 1
-			int w = framebuffer.width;
-			int h = framebuffer.height;
-			framebuffer.drawCircle(w / 10, h / 10, w / 10, Color::YELLOW);
+			framebuffer.drawCircle(100, 100, 100, Color::RED);
+			framebuffer.drawCircle(300, 100, 100, Color::YELLOW);
+			framebuffer.drawCircle(500, 100, 100, Color::GREEN);
+			framebuffer.drawCircle(700, 100, 100, Color::BLUE);
+
+			framebuffer.drawRectangle(50, 300, 50, 200, Color::WHITE, 0);
+			framebuffer.drawRectangle(100, 375, 50, 50, Color::WHITE, 0);
+			framebuffer.drawRectangle(150, 300, 50, 200, Color::WHITE, 0);
+			framebuffer.drawCircleLines(325, 400, 100, Color::WHITE, 200);
+			framebuffer.drawRectangle(450, 300, 50, 200, Color::WHITE, 1);
+			framebuffer.drawRectangle(500, 300, 75, 50, Color::WHITE, 1);
+			framebuffer.drawLine(600, 300, 675, 500, Color::WHITE);
+			framebuffer.drawLine(750, 300, 675, 500, Color::WHITE);
+			framebuffer.drawLine(637.5, 400, 712.5, 400, Color::WHITE);
+
+			framebuffer.drawLine(285, 410, 285, 450, Color::WHITE);
+			framebuffer.drawLine(365, 410, 365, 450, Color::WHITE);
+			framebuffer.drawCircleLines_Part(325, 400, 75, PI, PI*2, Color::CYAN, 100);
 			break;
 		}
 		case 2: { // task 2
