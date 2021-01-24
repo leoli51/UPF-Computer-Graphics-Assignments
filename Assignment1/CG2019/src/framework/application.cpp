@@ -32,18 +32,18 @@ typedef struct {
 	float x, y, vx, vy, ax, ay; // position, velocity and acceleration of particle
 } Particle;
 int num_particles = 1000;
-std::vector<Particle> particles(num_particles); 
+std::vector<Particle> particles(num_particles);
 int max_acceleration = 1000;
 int min_acceleration = 100;
-void reset_particle(Particle* p, float x, float y){
-		p->x = x;
-		p->y = y;
-		p->vx = 0;
-		p->vy = 0;
-		float rand_angle = randomValue() * 2 * PI;
-		float rand_acceleration = randomValue() * (max_acceleration - min_acceleration) + min_acceleration;
-		p->ax = std::cos(rand_angle) * rand_acceleration;
-		p->ay = std::sin(rand_angle) * rand_acceleration;
+void reset_particle(Particle* p, float x, float y) {
+	p->x = x;
+	p->y = y;
+	p->vx = 0;
+	p->vy = 0;
+	float rand_angle = randomValue() * 2 * PI;
+	float rand_acceleration = randomValue() * (max_acceleration - min_acceleration) + min_acceleration;
+	p->ax = std::cos(rand_angle) * rand_acceleration;
+	p->ay = std::sin(rand_angle) * rand_acceleration;
 }
 
 
@@ -51,7 +51,7 @@ void reset_particle(Particle* p, float x, float y){
 Image toolbar;
 Image canvas;
 Vector2 prev_mouse_pos;
-Color draw_color(255,0,0);
+Color draw_color(255, 0, 0);
 
 Application::Application(const char* caption, int width, int height)
 {
@@ -82,8 +82,8 @@ void Application::init(void)
 	normal_image.flipY();
 	grayscale_image.flipY();
 	channel_swap_image.flipY();
-	grayscale_image.forEachPixel([](Color c){float rgb = (c.r + c.g + c.b) / 3.0f; return Color(rgb, rgb, rgb);});
-	channel_swap_image.forEachPixel([](Color c){return Color(c.b, c.r, c.g);});
+	grayscale_image.forEachPixel([](Color c) {float rgb = (c.r + c.g + c.b) / 3.0f; return Color(rgb, rgb, rgb); });
+	channel_swap_image.forEachPixel([](Color c) {return Color(c.b, c.r, c.g); });
 
 	//loading task4.tga
 	task4.loadTGA("./task4.tga");
@@ -94,7 +94,7 @@ void Application::init(void)
 	smalltask4.flipY();
 
 	// initializing particles
-	for (int i = 0; i < particles.size(); i++){
+	for (int i = 0; i < particles.size(); i++) {
 		reset_particle(&(particles[i]), window_width / 2, window_height / 2);
 	}
 
@@ -112,138 +112,149 @@ void Application::render(Image& framebuffer)
 	framebuffer.fill(Color::BLACK);
 
 	switch (app_state) {
-		case 1: { // task 1
-			framebuffer.drawCircle(100, 100, 100, Color::RED);
-			framebuffer.drawCircle(300, 100, 100, Color::YELLOW);
-			framebuffer.drawCircle(500, 100, 100, Color::GREEN);
-			framebuffer.drawCircle(700, 100, 100, Color::BLUE);
+	case 1: { // task 1
+		framebuffer.drawCircle(100, 100, 100, Color::RED);
+		framebuffer.drawCircle(300, 100, 100, Color::YELLOW);
+		framebuffer.drawCircle(500, 100, 100, Color::GREEN);
+		framebuffer.drawCircle(700, 100, 100, Color::BLUE);
 
-			framebuffer.drawRectangle(50, 300, 50, 200, Color::WHITE, 0);
-			framebuffer.drawRectangle(100, 375, 50, 50, Color::WHITE, 0);
-			framebuffer.drawRectangle(150, 300, 50, 200, Color::WHITE, 0);
-			framebuffer.drawCircleLines(325, 400, 100, Color::WHITE, 200);
-			framebuffer.drawRectangle(450, 300, 50, 200, Color::WHITE, 1);
-			framebuffer.drawRectangle(500, 300, 75, 50, Color::WHITE, 1);
-			framebuffer.drawLine(600, 300, 675, 500, Color::WHITE);
-			framebuffer.drawLine(750, 300, 675, 500, Color::WHITE);
-			framebuffer.drawLine(637.5, 400, 712.5, 400, Color::WHITE);
+		framebuffer.drawRectangle(50, 300, 50, 200, Color::WHITE, 0);
+		framebuffer.drawRectangle(100, 375, 50, 50, Color::WHITE, 0);
+		framebuffer.drawRectangle(150, 300, 50, 200, Color::WHITE, 0);
+		framebuffer.drawCircleLines(325, 400, 100, Color::WHITE, 200);
+		framebuffer.drawRectangle(450, 300, 50, 200, Color::WHITE, 1);
+		framebuffer.drawRectangle(500, 300, 75, 50, Color::WHITE, 1);
+		framebuffer.drawLine(600, 300, 675, 500, Color::WHITE);
+		framebuffer.drawLine(750, 300, 675, 500, Color::WHITE);
+		framebuffer.drawLine(637.5, 400, 712.5, 400, Color::WHITE);
 
-			framebuffer.drawLine(285, 410, 285, 450, Color::WHITE);
-			framebuffer.drawLine(365, 410, 365, 450, Color::WHITE);
-			framebuffer.drawCircleLines_Part(325, 400, 75, PI, PI*2, Color::CYAN, 100);
-			break;
-		}
-		case 2: { // task 2
-			float radius = (framebuffer.height * framebuffer.height); //+ framebuffer.width * framebuffer.width); 
-			for (int x = 0; x < framebuffer.width; x++)
-				for (int y = 0; y < framebuffer.height; y++)
-					if (formula_shown == 0) {
-						int nx = x - framebuffer.width / 2;
-						int ny = y - framebuffer.height / 2;
-						Color c = Color::lerp(Color::BLACK, Color::WHITE, ((nx * nx) + (ny * ny)) / (radius));
-						framebuffer.setPixel(x, y, c);
-					}
-					else {
-						Color c = Color::lerp(Color::BLUE, Color::RED, ((float)x) / framebuffer.width);
-						framebuffer.setPixel(x, y, c);
-					}
-			break;
-		}
-		case 3: { // task 3
-			if (filter_shown == 0){ // normal image
-				framebuffer = normal_image;
-			}
-			else if (filter_shown == 1){ // grayscale
-				framebuffer = grayscale_image;
-			}
-			else { // channel swap
-				framebuffer = channel_swap_image;
-			}
-			break;
-		}
-		case 4: { // task4
-			for (unsigned int x = 0; x < smalltask4.width; x++){
-				for (unsigned int y = 0; y < smalltask4.height; y++){
-					int startx = window_width / 2;
-					int starty = window_height / 2;
-					int newx = x * cos(angle) - y * sin(angle) + startx;
-					int newy = y * cos(angle) + x * sin(angle) + starty;
-					framebuffer.setPixel(newx, newy, smalltask4.getPixelSafe(x * scale, y * scale));
+		framebuffer.drawLine(285, 410, 285, 450, Color::WHITE);
+		framebuffer.drawLine(365, 410, 365, 450, Color::WHITE);
+		framebuffer.drawCircleLines_Part(325, 400, 75, PI, PI * 2, Color::CYAN, 100);
+		break;
+	}
+	case 2: { // task 2
+		float radius = (framebuffer.height * framebuffer.height); //+ framebuffer.width * framebuffer.width); 
+		for (int x = 0; x < framebuffer.width; x++)
+			for (int y = 0; y < framebuffer.height; y++)
+				if (formula_shown == 0) {
+					int nx = x - framebuffer.width / 2;
+					int ny = y - framebuffer.height / 2;
+					Color c = Color::lerp(Color::BLACK, Color::WHITE, ((nx * nx) + (ny * ny)) / (radius));
+					framebuffer.setPixel(x, y, c);
 				}
+				else {
+					Color c = Color::lerp(Color::BLUE, Color::RED, ((float)x) / framebuffer.width);
+					framebuffer.setPixel(x, y, c);
+				}
+		break;
+	}
+	case 3: { // task 3
+		if (filter_shown == 0) { // normal image
+			framebuffer = normal_image;
+		}
+		else if (filter_shown == 1) { // grayscale
+			framebuffer = grayscale_image;
+		}
+		else { // channel swap
+			framebuffer = channel_swap_image;
+		}
+		break;
+	}
+	case 4: { // task4
+		for (unsigned int x = 0; x < window_width; x++) {
+			for (unsigned int y = 0; y < window_height; y++) {
+				int startx = window_width / 2;
+				int starty = window_height / 2;
+				int newx = x * cos(angle) - y * sin(angle) - startx * cos(angle) + starty * sin(angle) + startx;
+				int newy = y * cos(angle) + x * sin(angle) - starty * cos(angle) - startx * sin(angle) + starty;
+				int scalex = window_width * (scale - 1) / (scale * 2);
+				int scaley = window_height * (scale - 1) / (scale * 2);
+				if (scale >= 0)
+				{
+					framebuffer.setPixelSafe(newx, newy, task4.getPixelSafe(x * (1 / scale) + scalex, y * (1 / scale) + scaley));
+				}
+				else
+				{
+					framebuffer.setPixelSafe(newx, newy, task4.getPixelSafe(x * (-1 / scale) + scalex, y * (-1 / scale) + scaley));
+				}
+
+
 			}
-			break;
 		}
-		case 5: { // task 5
-			for (Particle p : particles)
-				framebuffer.setPixelSafe(p.x, p.y, Color::WHITE);
-			break;
-		}
-		case 6: { //task 6
-			framebuffer = canvas;
-			for (int xi = 0; xi < toolbar.width; xi++)
-				for (int yi = 0; yi < toolbar.height; yi++)
-					framebuffer.setPixelSafe(xi, framebuffer.height - yi, toolbar.getPixel(xi, yi));
-		}
+		break;
+	}
+	case 5: { // task 5
+		for (Particle p : particles)
+			framebuffer.setPixelSafe(p.x, p.y, Color::WHITE);
+		break;
+	}
+	case 6: { //task 6
+		framebuffer = canvas;
+		for (int xi = 0; xi < toolbar.width; xi++)
+			for (int yi = 0; yi < toolbar.height; yi++)
+				framebuffer.setPixelSafe(xi, framebuffer.height - yi, toolbar.getPixel(xi, yi));
+	}
 	}
 }
 
 //called after render
-void Application::update(double seconds_elapsed){
+void Application::update(double seconds_elapsed) {
 	switch (app_state) {
-		case 6: { // task 6
-			if (mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT)){
-				if (mouse_position.y > window_height - toolbar.height){
-					// check what icon has been clicked
-					if (mouse_position.x < 50) // first icon: clear canvas
-						canvas.fill(Color::WHITE);
-					else if (mouse_position.x < 100){ // second icon: save canvas
-						canvas.flipY(); // flip before saving so image gets saved correctly
-						canvas.saveTGA("./BeatifulDrawing.tga");
-						canvas.flipY();
-					}
-					else if (mouse_position.x < 500){ // color icons: pick correct icon
-						int cy = 25;
-						int cx = snap(mouse_position.x - 25 , 50.0f) + 25;
-						draw_color = toolbar.getPixel(cx, cy);
-					}
+	case 6: { // task 6
+		if (mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT)) {
+			if (mouse_position.y > window_height - toolbar.height) {
+				// check what icon has been clicked
+				if (mouse_position.x < 50) // first icon: clear canvas
+					canvas.fill(Color::WHITE);
+				else if (mouse_position.x < 100) { // second icon: save canvas
+					canvas.flipY(); // flip before saving so image gets saved correctly
+					canvas.saveTGA("./BeatifulDrawing.tga");
+					canvas.flipY();
 				}
-				else {
-					//draw on canvas
-					if (prev_mouse_pos.x != -1 && prev_mouse_pos.y != -1)
-						canvas.drawLine(prev_mouse_pos.x, prev_mouse_pos.y, mouse_position.x, mouse_position.y, draw_color);
-					prev_mouse_pos = mouse_position;
+				else if (mouse_position.x < 500) { // color icons: pick correct icon
+					int cy = 25;
+					int cx = snap(mouse_position.x - 25, 50.0f) + 25;
+					draw_color = toolbar.getPixel(cx, cy);
 				}
 			}
-			else 
-				prev_mouse_pos.set(-1, -1);
+			else {
+				//draw on canvas
+				if (prev_mouse_pos.x != -1 && prev_mouse_pos.y != -1)
+					canvas.drawLine(prev_mouse_pos.x, prev_mouse_pos.y, mouse_position.x, mouse_position.y, draw_color);
+				prev_mouse_pos = mouse_position;
+			}
+		}
+		else
+			prev_mouse_pos.set(-1, -1);
 
-			break;
+		break;
+	}
+	case 4: { // task4 use WASD keys to rotate/ scale
+		if (keystate[SDL_SCANCODE_W])
+			scale += seconds_elapsed * scale_velocity;
+		if (keystate[SDL_SCANCODE_S])
+			scale -= seconds_elapsed * scale_velocity;
+		if (keystate[SDL_SCANCODE_A])
+			angle += seconds_elapsed * angular_velocity;
+		if (keystate[SDL_SCANCODE_D])
+			angle -= seconds_elapsed * angular_velocity;
+		break;
+	}
+	case 5: { // task5
+		// update particles:
+		Particle* p;
+		for (int i = 0; i < particles.size(); i++) {
+			p = &particles[i];
+			p->vx += p->ax * seconds_elapsed;
+			p->vy += p->ay * seconds_elapsed;
+			p->x += p->vx * seconds_elapsed;
+			p->y += p->vy * seconds_elapsed;
+			if (p->x < 0 || p->x > window_width || p->y < 0 || p->y > window_height)
+				reset_particle(p, mouse_position.x, mouse_position.y);
 		}
-		case 4: { // task4 use WASD keys to rotate/ scale
-			if (keystate[SDL_SCANCODE_W])
-				scale += seconds_elapsed * scale_velocity;
-			if (keystate[SDL_SCANCODE_S])
-				scale -= seconds_elapsed * scale_velocity;
-			if (keystate[SDL_SCANCODE_A])
-				angle += seconds_elapsed * angular_velocity;
-			if (keystate[SDL_SCANCODE_D])
-				angle -= seconds_elapsed * angular_velocity;
-			break;
-		}
-		case 5: { // task5
-			// update particles:
-			Particle* p;
-			for (int i = 0; i < particles.size(); i++)	{
-				p = &particles[i];
-				p->vx += p->ax * seconds_elapsed;
-				p->vy += p->ay * seconds_elapsed;
-				p->x += p->vx * seconds_elapsed;
-				p->y += p->vy * seconds_elapsed;
-				if (p->x < 0 || p->x > window_width || p->y < 0 || p->y > window_height)
-					reset_particle(p, mouse_position.x, mouse_position.y);
-			}
-			break;
-		}
+		break;
+	}
 	}
 	//to see all the keycodes: https://wiki.libsdl.org/SDL_Keycode
 	//if (keystate[SDL_SCANCODE_SPACE]) //if key space is pressed

@@ -1,6 +1,8 @@
 Assignment 1
 
-Leonardo La Rocca  
+u192129, Leonardo La Rocca, leonardo.larocca01@estudiant.upf.edu
+
+u191835, CHIH-HAO WEI, chihhao.wei01@estudiant.upf.edu 
 
 How to use: 
     task1: no options
