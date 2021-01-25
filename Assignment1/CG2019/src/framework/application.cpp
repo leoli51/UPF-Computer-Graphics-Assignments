@@ -18,7 +18,6 @@ Image channel_swap_image;
 int filter_shown = 0;
 
 // task 4 variables
-int image_control = 0;
 float rotation_dir = 1;
 double angle = 0;
 float angular_velocity = 2;
@@ -42,12 +41,11 @@ void reset_particle(Particle* p,float x, float y){
 		p->vy = randomValue() * (max_velocity.y - min_velocity.y) + min_velocity.y;
 }
 
-
 // task 6 variables
 Image toolbar;
 Image canvas;
 Vector2 prev_mouse_pos;
-Color draw_color(255, 0, 0);
+Color draw_color(0, 0, 0);
 
 Application::Application(const char* caption, int width, int height)
 {
@@ -75,9 +73,7 @@ void Application::init(void)
 	normal_image.loadTGA("./mountain.tga");
 	grayscale_image.loadTGA("./mountain.tga");
 	channel_swap_image.loadTGA("./mountain.tga");
-	normal_image.flipY();
-	grayscale_image.flipY();
-	channel_swap_image.flipY();
+	// compute formulas
 	grayscale_image.forEachPixel([](Color c) {float rgb = (c.r + c.g + c.b) / 3.0f; return Color(rgb, rgb, rgb); });
 	channel_swap_image.forEachPixel([](Color c) {return Color(c.b, c.r, c.g); });
 
@@ -280,15 +276,6 @@ void Application::onKeyDown(SDL_KeyboardEvent event)
 		break;
 	case SDL_SCANCODE_E:
 		filter_shown = 2;
-		break;
-	case SDL_SCANCODE_Z:
-		image_control = 0;
-		break;
-	case SDL_SCANCODE_X:
-		image_control = 1;
-		break;
-	case SDL_SCANCODE_C:
-		image_control = 2;
 		break;
 	}
 }
