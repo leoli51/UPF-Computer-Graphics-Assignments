@@ -29,21 +29,17 @@ Image smalltask4;
 
 // task 5 variables 
 typedef struct {
-	float x, y, vx, vy, ax, ay; // position, velocity and acceleration of particle
+	float x, y, vx, vy; // position and velocity of particle
 } Particle;
 int num_particles = 1000;
 std::vector<Particle> particles(num_particles); 
-int max_acceleration = 1000;
-int min_acceleration = 100;
-void reset_particle(Particle* p, float x, float y){
+Vector2 max_velocity(20,-50);
+Vector2 min_velocity(-20, -100);
+void reset_particle(Particle* p,float x, float y){
 		p->x = x;
 		p->y = y;
-		p->vx = 0;
-		p->vy = 0;
-		float rand_angle = randomValue() * 2 * PI;
-		float rand_acceleration = randomValue() * (max_acceleration - min_acceleration) + min_acceleration;
-		p->ax = std::cos(rand_angle) * rand_acceleration;
-		p->ay = std::sin(rand_angle) * rand_acceleration;
+		p->vx = randomValue() * (max_velocity.x - min_velocity.x) + min_velocity.x;
+		p->vy = randomValue() * (max_velocity.y - min_velocity.y) + min_velocity.y;
 }
 
 
@@ -95,7 +91,7 @@ void Application::init(void)
 
 	// initializing particles
 	for (int i = 0; i < particles.size(); i++){
-		reset_particle(&(particles[i]), window_width / 2, window_height / 2);
+		reset_particle(&(particles[i]), randomValue() * window_width, randomValue() * window_height);
 	}
 
 	// loading the toolbar 
@@ -235,12 +231,11 @@ void Application::update(double seconds_elapsed){
 			Particle* p;
 			for (int i = 0; i < particles.size(); i++)	{
 				p = &particles[i];
-				p->vx += p->ax * seconds_elapsed;
-				p->vy += p->ay * seconds_elapsed;
+				//p->vy += -100 * seconds_elapsed;
 				p->x += p->vx * seconds_elapsed;
 				p->y += p->vy * seconds_elapsed;
 				if (p->x < 0 || p->x > window_width || p->y < 0 || p->y > window_height)
-					reset_particle(p, mouse_position.x, mouse_position.y);
+					reset_particle(p, randomValue() * window_width, window_height - 1);
 			}
 			break;
 		}
