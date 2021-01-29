@@ -2,6 +2,10 @@
 #include "utils.h"
 #include "image.h"
 
+
+// variable tells which task is drawing on the screen
+int app_state = 1;
+
 Application::Application(const char* caption, int width, int height)
 {
 	this->window = createWindow(caption, width, height);
@@ -9,8 +13,8 @@ Application::Application(const char* caption, int width, int height)
 	// initialize attributes
 	// Warning: DO NOT CREATE STUFF HERE, USE THE INIT 
 	// things create here cannot access opengl
-	int w,h;
-	SDL_GetWindowSize(window,&w,&h);
+	int w, h;
+	SDL_GetWindowSize(window, &w, &h);
 
 	this->window_width = w;
 	this->window_height = h;
@@ -28,20 +32,18 @@ void Application::init(void)
 }
 
 //render one frame
-void Application::render( Image& framebuffer )
+void Application::render(Image& framebuffer)
 {
 	//clear framebuffer if we want to start from scratch
 	framebuffer.fill(Color::BLACK);
 
-	//here you can add your code to fill the framebuffer
-
-	//fill every pixel of the image with some random data
-	for (unsigned int x = 0; x < framebuffer.width; x++)
+	switch (app_state) {
+	case 1:
 	{
-		for (unsigned int y = 0; y < framebuffer.height; y++)
-		{
-			framebuffer.setPixel(x, y, Color(randomValue() * 255, randomValue() * 255, randomValue() * 255)); //random color
-		}
+		framebuffer.drawLineDDA(10, 20, 200, 400, Color::WHITE);
+		break;
+	}
+	// and so on...
 	}
 }
 
@@ -58,14 +60,29 @@ void Application::update(double seconds_elapsed)
 }
 
 //keyboard press event 
-void Application::onKeyDown( SDL_KeyboardEvent event )
+void Application::onKeyDown(SDL_KeyboardEvent event)
 {
 	//to see all the keycodes: https://wiki.libsdl.org/SDL_Keycode
-	switch(event.keysym.scancode)
+	switch (event.keysym.scancode)
 	{
+		switch (event.keysym.scancode)
+		{
 		case SDL_SCANCODE_ESCAPE:
-			exit(0); 
+			exit(0);
 			break; //ESC key, kill the app
+		case SDL_SCANCODE_1:
+			app_state = 1;
+			break;
+		case SDL_SCANCODE_2:
+			app_state = 2;
+			break;
+		case SDL_SCANCODE_3:
+			app_state = 3;
+			break;
+		case SDL_SCANCODE_4:
+			app_state = 4;
+			break;
+		}
 	}
 }
 
@@ -76,7 +93,7 @@ void Application::onKeyUp(SDL_KeyboardEvent event)
 }
 
 //mouse button event
-void Application::onMouseButtonDown( SDL_MouseButtonEvent event )
+void Application::onMouseButtonDown(SDL_MouseButtonEvent event)
 {
 	if (event.button == SDL_BUTTON_LEFT) //left mouse pressed
 	{
@@ -84,7 +101,7 @@ void Application::onMouseButtonDown( SDL_MouseButtonEvent event )
 	}
 }
 
-void Application::onMouseButtonUp( SDL_MouseButtonEvent event )
+void Application::onMouseButtonUp(SDL_MouseButtonEvent event)
 {
 	if (event.button == SDL_BUTTON_LEFT) //left mouse unpressed
 	{

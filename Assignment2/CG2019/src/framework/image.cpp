@@ -247,4 +247,25 @@ void forEachPixel(Image& img, const Image& img2, F f) {
 		img.pixels[pos] = f( img.pixels[pos], img2.pixels[pos] );
 }
 
+void Image::drawLineDDA(int x1, int y1, int x2, int y2, const Color& color) {
+	float d;
+	float x, y;
+	float dx = (x2 - x1);
+	float dy = (y2 - y1);
+	if (fabs(dx) >= fabs(dy))
+		d = fabs(dx);
+	else
+		d = fabs(dy);
+	float vx = dx / d;
+	float vy = dy / d;
+	x = x1 + x1 * 0.5;
+	y = y1 + y1 * 0.5;
+	for (int i = 0; i <= d; i++)
+	{
+		setPixelSafe(x, y ,color);
+		x = x + vx;
+		y = y + vy;
+	}
+
+}
 #endif

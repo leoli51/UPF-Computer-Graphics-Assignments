@@ -64,6 +64,9 @@ public:
 	//fill the image with the color C
 	void fill(const Color& c) { for(unsigned int pos = 0; pos < width*height; ++pos) pixels[pos] = c; }
 
+	//draw DDALine
+	void drawLineDDA(int x1, int y1, int x2, int y2, const Color& color);
+
 	//returns a new image with the area from (startx,starty) of size width,height
 	Image getArea(unsigned int start_x, unsigned int start_y, unsigned int width, unsigned int height);
 
