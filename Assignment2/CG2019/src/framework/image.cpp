@@ -258,8 +258,8 @@ void Image::drawLineDDA(int x1, int y1, int x2, int y2, const Color& color) {
 		d = fabs(dy);
 	float vx = dx / d;
 	float vy = dy / d;
-	x = x1 + x1 * 0.5;
-	y = y1 + y1 * 0.5;
+	x = x1 + 0.5;
+	y = y1 + 0.5;
 	for (int i = 0; i <= d; i++)
 	{
 		setPixelSafe(x, y ,color);

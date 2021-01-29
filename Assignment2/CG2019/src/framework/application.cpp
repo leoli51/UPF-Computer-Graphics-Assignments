@@ -6,6 +6,11 @@
 // variable tells which task is drawing on the screen
 int app_state = 1;
 
+// task 1 variables
+int LineDDA_x1, LineDDA_x2;
+int LineDDA_y1, LineDDA_y2;
+int click = 1;
+
 Application::Application(const char* caption, int width, int height)
 {
 	this->window = createWindow(caption, width, height);
@@ -38,23 +43,21 @@ void Application::render(Image& framebuffer)
 	framebuffer.fill(Color::BLACK);
 
 	switch (app_state) {
-	case 1:
-	{
-		framebuffer.drawLineDDA(10, 20, 200, 400, Color::WHITE);
+	case 1: {
+		framebuffer.drawLineDDA(LineDDA_x1, LineDDA_y1, LineDDA_x2, LineDDA_y2, Color::WHITE);
 		break;
 	}
-	// and so on...
+	case 4: {
+
+	}
+		  // and so on...
 	}
 }
 
 //called after render
 void Application::update(double seconds_elapsed)
 {
-	//to see all the keycodes: https://wiki.libsdl.org/SDL_Keycode
-	if (keystate[SDL_SCANCODE_SPACE]) //if key space is pressed
-	{
-		//...
-	}
+
 
 	//to read mouse position use mouse_position
 }
@@ -65,25 +68,20 @@ void Application::onKeyDown(SDL_KeyboardEvent event)
 	//to see all the keycodes: https://wiki.libsdl.org/SDL_Keycode
 	switch (event.keysym.scancode)
 	{
-		switch (event.keysym.scancode)
-		{
-		case SDL_SCANCODE_ESCAPE:
-			exit(0);
-			break; //ESC key, kill the app
-		case SDL_SCANCODE_1:
-			app_state = 1;
-			break;
-		case SDL_SCANCODE_2:
-			app_state = 2;
-			break;
-		case SDL_SCANCODE_3:
-			app_state = 3;
-			break;
-		case SDL_SCANCODE_4:
-			app_state = 4;
-			break;
-		}
+	case SDL_SCANCODE_1:
+		app_state = 1;
+		break;
+	case SDL_SCANCODE_2:
+		app_state = 2;
+		break;
+	case SDL_SCANCODE_3:
+		app_state = 3;
+		break;
+	case SDL_SCANCODE_4:
+		app_state = 4;
+		break;
 	}
+
 }
 
 //keyboard key up event 
@@ -95,10 +93,31 @@ void Application::onKeyUp(SDL_KeyboardEvent event)
 //mouse button event
 void Application::onMouseButtonDown(SDL_MouseButtonEvent event)
 {
-	if (event.button == SDL_BUTTON_LEFT) //left mouse pressed
-	{
-		//if you read mouse position from the event, careful, Y is reversed, use mouse_position instead
+	switch (app_state) {
+	case 1: {
+		if (event.button == SDL_BUTTON_LEFT) {
+			if (click == 1)
+			{
+				LineDDA_x2 = mouse_position.x;
+				LineDDA_y2 = mouse_position.y;
+				LineDDA_x1 = mouse_position.x;
+				LineDDA_y1 = mouse_position.y;
+				click = 2;
+			}
+			else if (click == 2)
+			{
+				LineDDA_x2 = mouse_position.x;
+				LineDDA_y2 = mouse_position.y;
+				click = 1;
+			}
+		}
+		break;
 	}
+
+	}
+
+	//if you read mouse position from the event, careful, Y is reversed, use mouse_position instead
+
 }
 
 void Application::onMouseButtonUp(SDL_MouseButtonEvent event)
