@@ -16,11 +16,17 @@
 #define _CRT_SECURE_NO_WARNINGS
 #pragma warning(disable:4996)
 
+typedef struct
+{
+	int minx;
+	int maxx;
+}Cells;
+
 //Class Image: to store a matrix of pixels
 class Image
 {
 	//a general struct to store all the information about a TGA file
-	typedef struct sTGAInfo 
+	typedef struct sTGAInfo
 	{
 		unsigned int width;
 		unsigned int height;
@@ -43,29 +49,38 @@ public:
 	~Image();
 
 	//get the pixel at position x,y
-	Color getPixel(unsigned int x, unsigned int y) const { return pixels[ y * width + x ]; }
-	Color& getPixelRef(unsigned int x, unsigned int y)	{ return pixels[ y * width + x ]; }
-	Color getPixelSafe(unsigned int x, unsigned int y) const {	
-		x = clamp((unsigned int)x, 0, width-1); 
-		y = clamp((unsigned int)y, 0, height-1); 
-		return pixels[ y * width + x ]; 
+	Color getPixel(unsigned int x, unsigned int y) const { return pixels[y * width + x]; }
+	Color& getPixelRef(unsigned int x, unsigned int y) { return pixels[y * width + x]; }
+	Color getPixelSafe(unsigned int x, unsigned int y) const {
+		x = clamp((unsigned int)x, 0, width - 1);
+		y = clamp((unsigned int)y, 0, height - 1);
+		return pixels[y * width + x];
 	}
-
+	
 	//set the pixel at position x,y with value C
-	inline void setPixel(unsigned int x, unsigned int y, const Color& c) { pixels[ y * width + x ] = c; }
-	inline void setPixelSafe(unsigned int x, unsigned int y, const Color& c) const { x = clamp(x, 0, width-1); y = clamp(y, 0, height-1); pixels[ y * width + x ] = c; }
+	inline void setPixel(unsigned int x, unsigned int y, const Color& c) { pixels[y * width + x] = c; }
+	inline void setPixelSafe(unsigned int x, unsigned int y, const Color& c) const { x = clamp(x, 0, width - 1); y = clamp(y, 0, height - 1); pixels[y * width + x] = c; }
 
 	void resize(unsigned int width, unsigned int height);
 	void scale(unsigned int width, unsigned int height);
-	
+
 	void flipY(); //flip the image top-down
 	void flipX(); //flip the image left-right
 
 	//fill the image with the color C
-	void fill(const Color& c) { for(unsigned int pos = 0; pos < width*height; ++pos) pixels[pos] = c; }
+	void fill(const Color& c) { for (unsigned int pos = 0; pos < width * height; ++pos) pixels[pos] = c; }
 
 	//draw DDALine
 	void drawLineDDA(int x1, int y1, int x2, int y2, const Color& color);
+
+	//intialize table with height
+	void inittable(int height, Cells);
+
+	//draw DDALine and put data into table
+	void drawLineDDA_table(int x0, int y0, int x1, int y1, std::vector<Cells>& table);
+
+	//draw triangle with single color
+	void drawtriangle(int x1, int y1, int x2, int y2, int x3, int y3, const Color& color, bool fill);
 
 	//returns a new image with the area from (startx,starty) of size width,height
 	Image getArea(unsigned int start_x, unsigned int start_y, unsigned int width, unsigned int height);
@@ -75,20 +90,20 @@ public:
 	bool saveTGA(const char* filename);
 
 	//used to easy code
-	#ifndef IGNORE_LAMBDAS
+#ifndef IGNORE_LAMBDAS
 
-	//applies an algorithm to every pixel in an image
-	// you can use lambda sintax:   img.forEachPixel( [](Color c) { return c*2; });
-	// or callback sintax:   img.forEachPixel( mycallback ); //the callback has to be Color mycallback(Color c) { ... }
+//applies an algorithm to every pixel in an image
+// you can use lambda sintax:   img.forEachPixel( [](Color c) { return c*2; });
+// or callback sintax:   img.forEachPixel( mycallback ); //the callback has to be Color mycallback(Color c) { ... }
 	template <typename F>
-	Image& forEachPixel( F callback )
+	Image& forEachPixel(F callback)
 	{
-		for(unsigned int pos = 0; pos < width*height; ++pos)
+		for (unsigned int pos = 0; pos < width * height; ++pos)
 			pixels[pos] = callback(pixels[pos]);
 		return *this;
 	}
 
-	#endif
+#endif
 
 
 };

@@ -5,11 +5,18 @@
 
 // variable tells which task is drawing on the screen
 int app_state = 1;
+int formula_shown = 1;
 
 // task 1 variables
 int LineDDA_x1, LineDDA_x2;
 int LineDDA_y1, LineDDA_y2;
 int click = 1;
+
+// task 4 variables
+int triangle_x1, triangle_y1;
+int triangle_x2, triangle_y2;
+int triangle_x3, triangle_y3;
+int triangle_click = 1;
 
 Application::Application(const char* caption, int width, int height)
 {
@@ -31,7 +38,6 @@ Application::Application(const char* caption, int width, int height)
 //Here we have already GL working, so we can create meshes and textures
 void Application::init(void)
 {
-	std::cout << "initiating app..." << std::endl;
 
 	//here add your init stuff
 }
@@ -48,6 +54,19 @@ void Application::render(Image& framebuffer)
 		break;
 	}
 	case 4: {
+		if (formula_shown == 1)
+		{
+			// drawtriangle if three points are determined
+			if (triangle_click == 4)
+			{
+				framebuffer.drawtriangle(triangle_x1, triangle_y1, triangle_x2, triangle_y2, triangle_x3, triangle_y3, Color::WHITE, 1);
+			}
+
+		}
+		else
+		{
+
+		}
 
 	}
 		  // and so on...
@@ -80,6 +99,12 @@ void Application::onKeyDown(SDL_KeyboardEvent event)
 	case SDL_SCANCODE_4:
 		app_state = 4;
 		break;
+	case SDL_SCANCODE_Q:
+		formula_shown = 1;
+		break;
+	case SDL_SCANCODE_W:
+		formula_shown = 2;
+		break;
 	}
 
 }
@@ -111,6 +136,36 @@ void Application::onMouseButtonDown(SDL_MouseButtonEvent event)
 				click = 1;
 			}
 		}
+		break;
+	}
+	case 4: {
+		if (event.button == SDL_BUTTON_LEFT) {
+			if (triangle_click == 1)
+			{
+				triangle_x1 = mouse_position.x;
+				triangle_y1 = mouse_position.y;
+				triangle_click = 2;
+			}
+			else if (triangle_click == 2)
+			{
+				triangle_x2 = mouse_position.x;
+				triangle_y2 = mouse_position.y;
+				triangle_click = 3;
+			}
+			else if (triangle_click == 3)
+			{
+				triangle_x3 = mouse_position.x;
+				triangle_y3 = mouse_position.y;
+				triangle_click = 4;
+			}
+
+
+		}
+		else if (event.button == SDL_BUTTON_RIGHT) //redraw triangle
+		{
+			triangle_click = 1;
+		}
+
 		break;
 	}
 
