@@ -310,11 +310,14 @@ void Image::drawtriangle(int x1, int y1, int x2, int y2, int x3, int y3, const C
 		drawLineDDA_table(x2, y2, x3, y3, table);
 		drawLineDDA_table(x3, y3, x1, y1, table);
 
-		for (int i = 0; i <table.size(); i++)
+		for (int i = 0; i < table.size(); i++)
 		{
 			if (table[i].minx < table[i].maxx)
 			{
-				drawLineDDA(table[i].minx, i, table[i].maxx, i, color);
+				for (int start = table[i].minx; start <= table[i].maxx; start++)
+				{
+					setPixel(start, i, color);
+				}
 			}
 
 		}
@@ -328,6 +331,58 @@ void Image::drawtriangle(int x1, int y1, int x2, int y2, int x3, int y3, const C
 
 }
 
+void Image::drawtriangle_interpolated(int x1, int y1, int x2, int y2, int x3, int y3, const Color& color1, const Color& color2, const Color& color3) {
+	std::vector<Cells> table;
+	table.resize(height);
+	for (int i = 0; i < table.size(); i++) {
+		table[i].minx = 100000; //very big number
+		table[i].maxx = -100000; //very small number
+	}
+	drawLineDDA_table(x1, y1, x2, y2, table);
+	drawLineDDA_table(x2, y2, x3, y3, table);
+	drawLineDDA_table(x3, y3, x1, y1, table);
+
+	for (int i = 0; i < table.size(); i++)
+	{
+		if (table[i].minx < table[i].maxx)
+		{
+			for (int start = table[i].minx; start <= table[i].maxx; start++)
+			{
+				Vector2 v0;
+				v0.x = x3 - x1;
+				v0.y = y3 - y1;
+				Vector2 v1;
+				v1.x = x2 - x1;
+				v1.y = y2 - y1;
+				Vector2 v2;
+				v2.x = start - x1;
+				v2.y = i - y1;
+
+
+				float d00 = v0.dot(v0);
+				float d01 = v0.dot(v1);
+				float d11 = v1.dot(v1);
+				float d20 = v2.dot(v0);
+				float d21 = v2.dot(v1);
+				float denom = d00 * d11 - d01 * d01;
+				float v = (d11 * d20 - d01 * d21) / denom;
+				float w = (d00 * d21 - d01 * d20) / denom;
+				float u = 1.0 - v - w;
+
+				// check if a point inside tirangle
+				if (u>0 && v>0 && w>0)
+				{
+					Color c;
+					c = color1 * u + color2 * v + color3 * w;
+					setPixel(start, i, c);
+				}
+
+			}
+		}
+
+	}
+
+}
 
 //initialize table
 //void inittable(int height, Cells) {

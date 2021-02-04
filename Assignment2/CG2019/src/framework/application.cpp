@@ -65,7 +65,11 @@ void Application::render(Image& framebuffer)
 		}
 		else
 		{
-
+			if (triangle_click == 4)
+			{
+				framebuffer.drawtriangle_interpolated(triangle_x1, triangle_y1, triangle_x2, triangle_y2, triangle_x3, triangle_y3, Color::BLUE, Color::GREEN, Color::RED);
+			}
+			
 		}
 
 	}

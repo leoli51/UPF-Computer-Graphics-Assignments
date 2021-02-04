@@ -82,6 +82,9 @@ public:
 	//draw triangle with single color
 	void drawtriangle(int x1, int y1, int x2, int y2, int x3, int y3, const Color& color, bool fill);
 
+	//draw triangle with barycentric interpolation
+	void drawtriangle_interpolated(int x1, int y1, int x2, int y2, int x3, int y3, const Color& color1, const Color& color2, const Color& color3);
+
 	//returns a new image with the area from (startx,starty) of size width,height
 	Image getArea(unsigned int start_x, unsigned int start_y, unsigned int width, unsigned int height);
 
