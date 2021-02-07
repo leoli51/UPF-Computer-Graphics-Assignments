@@ -16,11 +16,11 @@
 #define _CRT_SECURE_NO_WARNINGS
 #pragma warning(disable:4996)
 
-typedef struct
-{
+
+typedef struct {
 	int minx;
 	int maxx;
-}Cells;
+} Cells;
 
 //Class Image: to store a matrix of pixels
 class Image
@@ -73,6 +73,12 @@ public:
 	//draw DDALine
 	void drawLineDDA(int x1, int y1, int x2, int y2, const Color& color);
 
+	// draw Bresenham line
+	void drawLineBresenham(int x0, int y0, int x1, int y1, const Color& c);
+
+	// draw Bresenham circle
+	void drawCircleBresenham(int x, int y, int radius, const Color& c);
+
 	//intialize table with height
 	void inittable(int height, Cells);
 
@@ -108,7 +114,9 @@ public:
 
 #endif
 
-
+private:
+	static void bresenhamTransform(int* x, int* y, int octant);
+	static void undoBresenhamTransform(int* x, int* y, int octant);
 };
 
 #endif

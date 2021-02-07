@@ -12,6 +12,13 @@ int LineDDA_x1, LineDDA_x2;
 int LineDDA_y1, LineDDA_y2;
 int click = 1;
 
+// task 2 variables
+int bline_x0 = 0;
+int bline_y0 = 0;
+int bline_x1 = 0;
+int bline_y1 = 0;
+int clicks = 0;
+
 // task 4 variables
 int triangle_x1, triangle_y1;
 int triangle_x2, triangle_y2;
@@ -53,25 +60,24 @@ void Application::render(Image& framebuffer)
 		framebuffer.drawLineDDA(LineDDA_x1, LineDDA_y1, LineDDA_x2, LineDDA_y2, Color::WHITE);
 		break;
 	}
+	case 2:{
+		if (clicks == 0)
+			framebuffer.drawLineBresenham(bline_x0, bline_y0, bline_x1, bline_y1, Color::CYAN);
+		break;
+	}
 	case 4: {
-		if (formula_shown == 1)
-		{
-			// drawtriangle if three points are determined
-			if (triangle_click == 4)
-			{
+		if (formula_shown == 1){
+			// draw triangle if three points are determined
+			if (triangle_click == 4){
 				framebuffer.drawtriangle(triangle_x1, triangle_y1, triangle_x2, triangle_y2, triangle_x3, triangle_y3, Color::WHITE, 1);
 			}
-
 		}
-		else
-		{
-			if (triangle_click == 4)
-			{
+		else{
+			if (triangle_click == 4){
 				framebuffer.drawtriangle_interpolated(triangle_x1, triangle_y1, triangle_x2, triangle_y2, triangle_x3, triangle_y3, Color::BLUE, Color::GREEN, Color::RED);
 			}
-			
 		}
-
+		break;
 	}
 		  // and so on...
 	}
@@ -80,8 +86,13 @@ void Application::render(Image& framebuffer)
 //called after render
 void Application::update(double seconds_elapsed)
 {
-
-
+	switch (app_state) {
+		case 2: {
+			bline_x1 = mouse_position.x;
+			bline_y1 = mouse_position.y;
+			break;
+		}
+	}
 	//to read mouse position use mouse_position
 }
 
@@ -142,6 +153,13 @@ void Application::onMouseButtonDown(SDL_MouseButtonEvent event)
 		}
 		break;
 	}
+	case 2: {
+		if (event.button == SDL_BUTTON_LEFT){
+			bline_x0 = mouse_position.x;
+			bline_y0 = mouse_position.y;
+		}
+		break;
+	}
 	case 4: {
 		if (event.button == SDL_BUTTON_LEFT) {
 			if (triangle_click == 1)
@@ -162,14 +180,11 @@ void Application::onMouseButtonDown(SDL_MouseButtonEvent event)
 				triangle_y3 = mouse_position.y;
 				triangle_click = 4;
 			}
-
-
 		}
 		else if (event.button == SDL_BUTTON_RIGHT) //redraw triangle
 		{
 			triangle_click = 1;
 		}
-
 		break;
 	}
 

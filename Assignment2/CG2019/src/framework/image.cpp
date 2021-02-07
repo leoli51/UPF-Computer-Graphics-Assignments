@@ -1,6 +1,5 @@
 #include "image.h"
 
-
 Image::Image() {
 	width = 0; height = 0;
 	pixels = NULL;
@@ -48,8 +47,6 @@ Image::~Image()
 	if (pixels)
 		delete pixels;
 }
-
-
 
 //change image size (the old one will remain in the top-left corner)
 void Image::resize(unsigned int width, unsigned int height)
@@ -247,6 +244,8 @@ void forEachPixel(Image& img, const Image& img2, F f) {
 		img.pixels[pos] = f(img.pixels[pos], img2.pixels[pos]);
 }
 
+#endif
+
 void Image::drawLineDDA(int x1, int y1, int x2, int y2, const Color& color) {
 	float d;
 	float x, y;
@@ -294,6 +293,105 @@ void Image::drawLineDDA_table(int x0, int y0, int x1, int y1, std::vector<Cells>
 			table[y].maxx = x;
 		}
 	}
+}
+
+void Image::drawLineBresenham(int x0, int y0, int x1, int y1, const Color& c){
+	// switch points if necessary (x1 < x0)
+	if (x1 < x0){
+		int tmp = x0;
+		x0 = x1;
+		x1 = tmp;
+		tmp = y0;
+		y0 = y1;
+		y1 = tmp;
+	}
+
+	// normalize coordinates (center line in 0,0)
+	x1 -= x0;
+	y1 -= y0;
+
+	int dx = x1;
+	int dy = y1;
+
+	// compute octant, rest of octants are not considered (handled by the point switching at the beginning)
+	int octant = 1;
+	if (std::abs(dy) > dx) 
+		octant = dy > 0 ? 2 : 7;
+	else 
+		octant = dy < 0 ? 8 : 1;
+
+	// compute new x1, and y1 after transforms
+	bresenhamTransform(&x1, &y1, octant);
+	dx = x1;
+	dy = y1;
+	int x = 0;
+	int y = 0;
+
+	int diff_inc_E = 2*dy; // obtained by f(x+1, y) - f(x, y)
+	int diff_inc_NE = 2*(dy - dx); // obtained by f(x+1, y+1) - f(x, y)
+	int diff = 2*dy - dx; // 2 * difference of implicit function of line between start and midpoint
+
+	undoBresenhamTransform(&x, &y, octant); // return to original octant
+	setPixelSafe(x + x0, y + y0, c); // paint pixel
+	bresenhamTransform(&x, &y, octant); // return to first octant
+	
+	while (x < x1){
+		if (diff <= 0){ // choose E
+			diff += diff_inc_E; // update difference: add the difference of point E
+			x++;
+		}
+		else { // choose NE
+			diff += diff_inc_NE; // update difference: add the difference of point NE
+			x++;
+			y++;
+		}
+		undoBresenhamTransform(&x, &y, octant); // return to original octant 
+		setPixelSafe(x + x0, y + y0, c); // paint pixel
+		bresenhamTransform(&x, &y, octant); // return to first octant
+	}
+}
+
+void Image::bresenhamTransform(int* x, int* y, int octant){
+	if (octant == 2){
+		// switch axes
+		int tmp = *x;
+		*x = *y;
+		*y = tmp;
+	}
+	else if (octant == 8){
+		// invert y
+		*y *= -1;
+	}
+	else if (octant == 7){
+		// multiply y by -1 and invert axes
+		*y *= -1;
+		int tmp = *x;
+		*x = *y;
+		*y = tmp;
+	}
+}
+
+void Image::undoBresenhamTransform(int* x, int* y, int octant){
+	if (octant == 2){
+		// switch axes
+		int tmp = *x;
+		*x = *y;
+		*y = tmp;
+	}
+	else if (octant == 8){
+		// invert y
+		*y *= -1;
+	}
+	else if (octant == 7){
+		// invert axes and multiply y by -1
+		int tmp = *x;
+		*x = *y;
+		*y = -tmp;
+	}
+}
+
+void Image::drawCircleBresenham(int x, int y, int radius, const Color& c){
+	
 }
 
 void Image::drawtriangle(int x1, int y1, int x2, int y2, int x3, int y3, const Color& color, bool fill) {
@@ -388,5 +486,3 @@ void Image::drawtriangle_interpolated(int x1, int y1, int x2, int y2, int x3, in
 //void inittable(int height, Cells) {
 //
 //}
-
-#endif
