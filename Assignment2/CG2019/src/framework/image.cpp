@@ -321,7 +321,7 @@ void Image::drawLineBresenham(int x0, int y0, int x1, int y1, const Color& c){
 		octant = dy < 0 ? 8 : 1;
 
 	// compute new x1, and y1 after transforms
-	bresenhamTransform(&x1, &y1, octant);
+	bresenhamLineTransform(&x1, &y1, octant);
 	dx = x1;
 	dy = y1;
 	int x = 0;
@@ -331,9 +331,9 @@ void Image::drawLineBresenham(int x0, int y0, int x1, int y1, const Color& c){
 	int diff_inc_NE = 2*(dy - dx); // obtained by f(x+1, y+1) - f(x, y)
 	int diff = 2*dy - dx; // 2 * difference of implicit function of line between start and midpoint
 
-	undoBresenhamTransform(&x, &y, octant); // return to original octant
+	undoBresenhamLineTransform(&x, &y, octant); // return to original octant
 	setPixelSafe(x + x0, y + y0, c); // paint pixel
-	bresenhamTransform(&x, &y, octant); // return to first octant
+	bresenhamLineTransform(&x, &y, octant); // return to first octant
 	
 	while (x < x1){
 		if (diff <= 0){ // choose E
@@ -345,13 +345,13 @@ void Image::drawLineBresenham(int x0, int y0, int x1, int y1, const Color& c){
 			x++;
 			y++;
 		}
-		undoBresenhamTransform(&x, &y, octant); // return to original octant 
+		undoBresenhamLineTransform(&x, &y, octant); // return to original octant 
 		setPixelSafe(x + x0, y + y0, c); // paint pixel
-		bresenhamTransform(&x, &y, octant); // return to first octant
+		bresenhamLineTransform(&x, &y, octant); // return to first octant
 	}
 }
 
-void Image::bresenhamTransform(int* x, int* y, int octant){
+void Image::bresenhamLineTransform(int* x, int* y, int octant){
 	if (octant == 2){
 		// switch axes
 		int tmp = *x;
@@ -371,7 +371,7 @@ void Image::bresenhamTransform(int* x, int* y, int octant){
 	}
 }
 
-void Image::undoBresenhamTransform(int* x, int* y, int octant){
+void Image::undoBresenhamLineTransform(int* x, int* y, int octant){
 	if (octant == 2){
 		// switch axes
 		int tmp = *x;
@@ -390,9 +390,56 @@ void Image::undoBresenhamTransform(int* x, int* y, int octant){
 	}
 }
 
-void Image::drawCircleBresenham(int x, int y, int radius, const Color& c){
-	
+void Image::drawCircleBresenham(int xc, int yc, int radius, const Color& c, bool fill){
+	// first point is (r,0)
+	// next we evaluate f(x, y) = x^2 + y^2 - r^2 on the midpoint: x -0.5 y + 1
+	// if the f(x+0.5, y+1) >= 0 it means the midpoint is outside the circle so we set the (x-1, y+1) pixel
+	// if the f(x+0.5, y+1) < 0 it means the midpoint is inside the circle so we set the (x, y+1) pixel
+	// The pixel in the other octants are painted through reflection. 
+	int x = radius;
+	int y = 0;
+	int diff = -4*x + 5; // 4 * diff = 8y - 4x + 5
+	setPixelBresenhamCircle(x, y, xc, yc, c, fill);
+
+	while (y < x){
+		if (diff >= 0){
+			// draw x-1, y+1
+			diff += 8*y - 8*x + 4; 
+			x--;
+			y++;
+		}
+		else {
+			// draw x, y+1
+			diff += 8*y + 4;
+			y++;
+		}
+		setPixelBresenhamCircle(x, y, xc, yc, c, fill);
+	}
 }
+
+void Image::setPixelBresenhamCircle(int x, int y, int xc, int yc, const Color& c, bool fill){
+	if (fill){
+		for (int i = -x + xc; i <= x + xc; i++) // 1 - 4
+			setPixelSafe(i, y + yc, c); 
+		for (int i = -y + xc; i <= y + xc; i++) // 2 - 3
+			setPixelSafe(i, x + yc, c);
+		for (int i = -x + xc; i <= x + xc; i++) // 5 - 8
+			setPixelSafe(i, -y + yc, c);
+		for (int i = -y + xc; i <= y + xc; i++) // 6 - 7
+			setPixelSafe(i, -x + yc, c);
+	}
+	else {
+		setPixelSafe(x + xc, y + yc, c); // 1
+		setPixelSafe(y + xc, x + yc, c); // 2
+		setPixelSafe(-y + xc, x + yc, c); // 3
+		setPixelSafe(-x + xc, y + yc, c); // 4
+		setPixelSafe(-x + xc, -y + yc, c); // 5
+		setPixelSafe(-y + xc, -x + yc, c); // 6
+		setPixelSafe(y + xc, -x + yc, c); // 7
+		setPixelSafe(x + xc, -y + yc, c); // 8
+	}
+}
+
 
 void Image::drawtriangle(int x1, int y1, int x2, int y2, int x3, int y3, const Color& color, bool fill) {
 

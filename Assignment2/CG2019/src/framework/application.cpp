@@ -17,7 +17,12 @@ int bline_x0 = 0;
 int bline_y0 = 0;
 int bline_x1 = 0;
 int bline_y1 = 0;
-int clicks = 0;
+
+// task 3 variables
+int bcircle_x = 0;
+int bcircle_y = 0;
+int bcircle_radius = 0;
+bool bcircle_fill = true;
 
 // task 4 variables
 int triangle_x1, triangle_y1;
@@ -56,30 +61,32 @@ void Application::render(Image& framebuffer)
 	framebuffer.fill(Color::BLACK);
 
 	switch (app_state) {
-	case 1: {
-		framebuffer.drawLineDDA(LineDDA_x1, LineDDA_y1, LineDDA_x2, LineDDA_y2, Color::WHITE);
-		break;
-	}
-	case 2:{
-		if (clicks == 0)
+		case 1: {
+			framebuffer.drawLineDDA(LineDDA_x1, LineDDA_y1, LineDDA_x2, LineDDA_y2, Color::WHITE);
+			break;
+		}
+		case 2: {
 			framebuffer.drawLineBresenham(bline_x0, bline_y0, bline_x1, bline_y1, Color::CYAN);
-		break;
-	}
-	case 4: {
-		if (formula_shown == 1){
-			// draw triangle if three points are determined
-			if (triangle_click == 4){
-				framebuffer.drawtriangle(triangle_x1, triangle_y1, triangle_x2, triangle_y2, triangle_x3, triangle_y3, Color::WHITE, 1);
-			}
+			break;
 		}
-		else{
-			if (triangle_click == 4){
-				framebuffer.drawtriangle_interpolated(triangle_x1, triangle_y1, triangle_x2, triangle_y2, triangle_x3, triangle_y3, Color::BLUE, Color::GREEN, Color::RED);
-			}
+		case 3: {
+			framebuffer.drawCircleBresenham(bcircle_x, bcircle_y, bcircle_radius, Color::WHITE, bcircle_fill);
+			break;
 		}
-		break;
-	}
-		  // and so on...
+		case 4: {
+			if (formula_shown == 1){
+				// draw triangle if three points are determined
+				if (triangle_click == 4){
+					framebuffer.drawtriangle(triangle_x1, triangle_y1, triangle_x2, triangle_y2, triangle_x3, triangle_y3, Color::WHITE, 1);
+				}
+			}
+			else{
+				if (triangle_click == 4){
+					framebuffer.drawtriangle_interpolated(triangle_x1, triangle_y1, triangle_x2, triangle_y2, triangle_x3, triangle_y3, Color::BLUE, Color::GREEN, Color::RED);
+				}
+			}
+			break;
+		}
 	}
 }
 
@@ -92,8 +99,13 @@ void Application::update(double seconds_elapsed)
 			bline_y1 = mouse_position.y;
 			break;
 		}
+		case 3: {
+			int tmp_x = mouse_position.x - bcircle_x;
+			int tmp_y = mouse_position.y - bcircle_y;
+			bcircle_radius = (int) std::sqrt(tmp_x * tmp_x + tmp_y * tmp_y);
+			break;
+		}
 	}
-	//to read mouse position use mouse_position
 }
 
 //keyboard press event 
@@ -119,6 +131,9 @@ void Application::onKeyDown(SDL_KeyboardEvent event)
 		break;
 	case SDL_SCANCODE_W:
 		formula_shown = 2;
+		break;
+	case SDL_SCANCODE_F:
+		bcircle_fill = !bcircle_fill;
 		break;
 	}
 
@@ -157,6 +172,13 @@ void Application::onMouseButtonDown(SDL_MouseButtonEvent event)
 		if (event.button == SDL_BUTTON_LEFT){
 			bline_x0 = mouse_position.x;
 			bline_y0 = mouse_position.y;
+		}
+		break;
+	}
+	case 3: {
+		if (event.button == SDL_BUTTON_LEFT){
+			bcircle_x = mouse_position.x;
+			bcircle_y = mouse_position.y;
 		}
 		break;
 	}

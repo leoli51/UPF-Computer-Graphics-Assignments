@@ -77,7 +77,7 @@ public:
 	void drawLineBresenham(int x0, int y0, int x1, int y1, const Color& c);
 
 	// draw Bresenham circle
-	void drawCircleBresenham(int x, int y, int radius, const Color& c);
+	void drawCircleBresenham(int xc, int yc, int radius, const Color& c, bool fill);
 
 	//intialize table with height
 	void inittable(int height, Cells);
@@ -115,8 +115,9 @@ public:
 #endif
 
 private:
-	static void bresenhamTransform(int* x, int* y, int octant);
-	static void undoBresenhamTransform(int* x, int* y, int octant);
+	void setPixelBresenhamCircle(int x, int y, int xc, int yc, const Color& c, bool fill);
+	static void bresenhamLineTransform(int* x, int* y, int octant);
+	static void undoBresenhamLineTransform(int* x, int* y, int octant);
 };
 
 #endif
