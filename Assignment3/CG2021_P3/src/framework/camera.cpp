@@ -31,11 +31,11 @@ void Camera::updateViewMatrix()
 	Vector3 side = front.cross(up).normalize();
 	Vector3 top = side.cross(front);
 
-	//view_matrix.setIdentity();
-	view_matrix.M[0][0] = side.x; view_matrix.M[0][1] = side.y; view_matrix.M[0][2] = side.z;  view_matrix.M[0][3] = -side.x * eye.x - side.y * eye.y - side.z * eye.z;
-	view_matrix.M[1][0] = top.x; view_matrix.M[1][1] = top.y; view_matrix.M[1][2] = top.z;  view_matrix.M[1][3] = -top.x * eye.x - top.y * eye.y - top.z * eye.z;
-	view_matrix.M[2][0] = front.x; 	view_matrix.M[2][1] = front.y; view_matrix.M[2][2] = front.z;  view_matrix.M[2][3] = -front.x * eye.x - front.y * eye.y - front.z * eye.z;
-	view_matrix.M[3][0] = 0.0; 	view_matrix.M[3][1] = 0; view_matrix.M[3][2] = 0;  view_matrix.M[3][3] = 1.0;
+	view_matrix.setIdentity();
+	view_matrix.M[0][0] = side.x; view_matrix.M[0][1] = top.x; view_matrix.M[0][2] = -front.x; 
+	view_matrix.M[1][0] = side.y; view_matrix.M[1][1] = top.y; view_matrix.M[1][2] = -front.y; 
+	view_matrix.M[2][0] = side.z; view_matrix.M[2][1] = top.z; view_matrix.M[2][2] = -front.z;
+	view_matrix.traslateLocal(-eye.x, -eye.y, -eye.z);
 	
 	//ADD ANY MATRIX POSTCOMPUTATIONS IF NECESSARY
 
@@ -54,10 +54,11 @@ void Camera::updateProjectionMatrix()
 
 	//CHANGE THE MATRIX VALUES USING YOUR OWN
 	projection_matrix.setIdentity();
-	projection_matrix.M[0][0] = f / aspect; projection_matrix.M[0][1] = 0.0; projection_matrix.M[0][2] = 0.0;  projection_matrix.M[0][3] = 0.0;
-	projection_matrix.M[1][0] = 0.0; 	projection_matrix.M[1][1] = f; projection_matrix.M[1][2] = 0.0;  projection_matrix.M[1][3] = 0.0;
-	projection_matrix.M[2][0] = 0.0; 	projection_matrix.M[2][1] = 0.0; projection_matrix.M[2][2] = -(far_plane + near_plane) / (near_plane - far_plane); projection_matrix.M[2][3] = -2 * far_plane * near_plane / (near_plane - far_plane);
-	projection_matrix.M[3][0] = 0.0; 	projection_matrix.M[3][1] = 0.0; projection_matrix.M[3][2] = -1;  projection_matrix.M[3][3] = 0.0;
+	projection_matrix.M[0][0] = f / aspect;
+	projection_matrix.M[1][1] = f;
+	projection_matrix.M[2][2] = -(far_plane + near_plane) / (near_plane - far_plane);
+	projection_matrix.M[3][2] = -2 * far_plane * near_plane / (near_plane - far_plane);
+	projection_matrix.M[2][3] = -1; 
 
 	//update the viewprojection_matrix
 	viewprojection_matrix = view_matrix * projection_matrix;
