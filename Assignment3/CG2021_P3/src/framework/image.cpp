@@ -237,6 +237,130 @@ bool Image::saveTGA(const char* filename)
 	return true;
 }
 
+void Image::drawLineBresenham(int x0, int y0, int x1, int y1, const Color& c){
+	// normalize coordinates (center line in 0,0)
+	x1 -= x0;
+	y1 -= y0;
+
+	int dx = x1;
+	int dy = y1;
+
+	// compute octant
+	int octant = 1;
+	if (std::abs(dy) > dx) {
+		// 2 / 3 / 6 / 7
+		if (dy > 0) // 2 / 3
+			octant = dx > 0 ? 2 : 3;
+		else // 6 / 7
+			octant = dx > 0 ?  7 : 6;
+	}
+	else {
+		// 1 / 4 / 5 / 8
+		if (dx > 0) // 1 / 8
+			octant = dy > 0 ? 1 : 8;
+		else // 4 / 5
+			octant = dy > 0 ? 4 : 5;
+	}
+
+	// compute new x1, and y1 after transforms
+	bresenhamLineTransform(&x1, &y1, octant);
+	dx = x1;
+	dy = y1;
+	int x = 0;
+	int y = 0;
+
+	int diff_inc_E = 2*dy; // obtained by f(x+1, y) - f(x, y)
+	int diff_inc_NE = 2*(dy - dx); // obtained by f(x+1, y+1) - f(x, y)
+	int diff = 2*dy - dx; // 2 * difference of implicit function of line between start and midpoint
+
+	bresenhamUndoLineTransform(&x, &y, octant); // return to original octant
+	setPixelSafe(x + x0, y + y0, c); // paint pixel
+	bresenhamLineTransform(&x, &y, octant); // return to first octant
+	
+	while (x < x1){
+		if (diff <= 0){ // choose E
+			diff += diff_inc_E; // update difference: add the difference of point E
+			x++;
+		}
+		else { // choose NE
+			diff += diff_inc_NE; // update difference: add the difference of point NE
+			x++;
+			y++;
+		}
+		bresenhamUndoLineTransform(&x, &y, octant); // return to original octant 
+		setPixelSafe(x + x0, y + y0, c); // paint pixel
+		bresenhamLineTransform(&x, &y, octant); // return to first octant
+	}
+}
+
+void Image::bresenhamLineTransform(int* x, int* y, int octant){
+	int tmp = *x;
+	switch (octant) {
+		case 1:
+			break;
+		case 2:
+			*x = *y;
+			*y = tmp;
+			break;
+		case 3:
+			*x = -*y;
+			*y = tmp;
+			break;
+		case 4:
+			*x *= -1;
+			break;
+		case 5:
+			*x *= -1;
+			*y *= -1;
+			break;
+		case 6:
+			*x = -*y;
+			*y = -tmp;
+			break;
+		case 7:
+			*x = *y;
+			*y = -tmp;
+			break;
+		case 8:
+			*y *= -1;
+			break;
+	}
+}
+
+void Image::bresenhamUndoLineTransform(int* x, int* y, int octant){
+	int tmp = *x;
+	switch (octant) {
+		case 1:
+			break;
+		case 2:
+			*x = *y;
+			*y = tmp;
+			break;
+		case 3:
+			*x = *y;
+			*y = -tmp;
+			break;
+		case 4:
+			*x *= -1;
+			break;
+		case 5:
+			*x *= -1;
+			*y *= -1;
+			break;
+		case 6:
+			*x = -*y;
+			*y = -tmp;
+			break;
+		case 7:
+			*x = -*y;
+			*y = tmp;
+			break;
+		case 8:
+			*y *= -1;
+			break;
+	}
+}
+
 void Image::drawLineDDA(int x1, int y1, int x2, int y2, const Color& color) {
 	float x, y;
 	float dx = (x2 - x1);
@@ -306,9 +430,9 @@ void Image::drawtriangle(int x1, int y1, int x2, int y2, int x3, int y3, const C
 	}
 	else
 	{
-		drawLineDDA(x1, y1, x2, y2, color);
-		drawLineDDA(x2, y2, x3, y3, color);
-		drawLineDDA(x3, y3, x1, y1, color);
+		drawLineBresenham(x1, y1, x2, y2, color);
+		drawLineBresenham(x2, y2, x3, y3, color);
+		drawLineBresenham(x3, y3, x1, y1, color);
 	}
 
 }

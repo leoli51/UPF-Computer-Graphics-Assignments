@@ -79,6 +79,7 @@ public:
 	bool saveTGA(const char* filename);
 
 	// draw functions
+	void drawLineBresenham(int x0, int y0, int x1, int y1, const Color& color);
 	void drawLineDDA(int x1, int y1, int x2, int y2, const Color& color);
 	void drawLineDDA_table(int x0, int y0, int x1, int y1, std::vector<Cells>& table);
 	void drawtriangle(int x1, int y1, int x2, int y2, int x3, int y3, const Color& color, bool fill);
@@ -99,7 +100,9 @@ public:
 
 	#endif
 
-
+	private:
+		void bresenhamLineTransform(int* x, int* y, int octant);
+		void bresenhamUndoLineTransform(int* x, int* y, int octant);
 };
 
 //Image that stores one float per pixel instead of a Color, like a matrix, useful for a Depth Buffer

@@ -5,7 +5,7 @@
 
 // camera position variables
 float move_velocity = 50;
-float mouse_sensitivity = 10;
+float mouse_sensitivity = 0.05;
 
 
 Application::Application(const char* caption, int width, int height)
@@ -34,7 +34,7 @@ void Application::init(void)
 	
 	//here we create a global camera and set a position and projection properties
 	camera = new Camera();
-	camera->lookAt(Vector3(0,10,-1000),Vector3(0,10,0),Vector3(0,1,0)); //define eye,center,up
+	camera->lookAt(Vector3(0,10,-100),Vector3(0,0,0),Vector3(0,1,0)); //define eye,center,up
 	camera->perspective(60, window_width / (float)window_height, 0.1, 10000); //define fov,aspect,near,far
 
 	//load a mesh
@@ -73,7 +73,7 @@ void Application::init(void)
 void Application::render(Image& framebuffer)
 {
 	framebuffer.fill(Color(40, 45, 60)); //clear
-
+	std::cout<<camera->eye.x<<" "<<camera->eye.y<<" "<<camera->eye.z<<std::endl;
 	//for every point of the mesh (to draw triangles take three points each time and connect the points between them (1,2,3,   4,5,6,   ...)
 	for (int i = 0; i < mesh->vertices.size() / 100; i+=3)
 	{
@@ -119,7 +119,12 @@ void Application::update(double seconds_elapsed)
 		camera->eye.y -= move_velocity * seconds_elapsed;
 	if (keystate[SDL_SCANCODE_UP])
 		camera->eye.y += move_velocity * seconds_elapsed;
-
+	if (keystate[SDL_SCANCODE_Z])
+		camera->eye.z -= move_velocity * seconds_elapsed;
+	if (keystate[SDL_SCANCODE_X])
+		camera->eye.z += move_velocity * seconds_elapsed;
+	
+	camera->center = Vector3(0,0,10);
 	camera->center.x += mouse_sensitivity * mouse_delta.x;
 	camera->center.y += mouse_sensitivity * mouse_delta.y;
 
