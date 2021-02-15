@@ -147,24 +147,24 @@ bool Mesh::loadOBJ(const char* filename)
 				v2 = parseVector3( tokens[iPoly].c_str(), '/' );
 				v3 = parseVector3( tokens[iPoly+1].c_str(), '/' );
 
-				vertices.push_back( indexed_positions[ (unsigned int)(v1.x) -1] );
-				vertices.push_back( indexed_positions[ (unsigned int)(v2.x) -1] );
-				vertices.push_back( indexed_positions[ (unsigned int)(v3.x) -1] );
+				vertices.push_back( indexed_positions[(unsigned int)(v1.x) -1 ] );
+				vertices.push_back( indexed_positions[(unsigned int)(v2.x) -1] );
+				vertices.push_back( indexed_positions[(unsigned int)(v3.x) -1] );
 				//triangles.push_back( VECTOR_INDICES_TYPE(vertex_i, vertex_i+1, vertex_i+2) ); //not needed
 				vertex_i += 3;
 
 				if (indexed_uvs.size() > 0)
 				{
-					uvs.push_back( indexed_uvs[ (unsigned int)(v1.y) -1] );
-					uvs.push_back( indexed_uvs[ (unsigned int)(v2.y) -1] );
-					uvs.push_back( indexed_uvs[ (unsigned int)(v3.y) -1] );
+					uvs.push_back( indexed_uvs[(unsigned int)(v1.y) -1] );
+					uvs.push_back( indexed_uvs[(unsigned int)(v2.y) -1] );
+					uvs.push_back( indexed_uvs[(unsigned int)(v3.y) -1] );
 				}
 
 				if (indexed_normals.size() > 0)
 				{
-					normals.push_back( indexed_normals[ (unsigned int)(v1.z) -1] );
-					normals.push_back( indexed_normals[ (unsigned int)(v2.z) -1] );
-					normals.push_back( indexed_normals[ (unsigned int)(v3.z) -1] );
+					normals.push_back( indexed_normals[(unsigned int)(v1.z) -1]);
+					normals.push_back( indexed_normals[(unsigned int)(v2.z) -1]);
+					normals.push_back( indexed_normals[(unsigned int)(v3.z) -1]);
 				}
 			}
 		}
