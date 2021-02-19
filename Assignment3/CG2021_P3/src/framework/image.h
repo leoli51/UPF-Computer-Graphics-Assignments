@@ -80,9 +80,11 @@ public:
 
 	// draw functions
 	void drawLineBresenham(int x0, int y0, int x1, int y1, const Color& color);
+	void drawLineFastBresenham(int x0, int y0, int x1, int y1, const Color& color);
 	void drawLineDDA(int x1, int y1, int x2, int y2, const Color& color);
-	void drawLineDDA_table(int x0, int y0, int x1, int y1, std::vector<Cells>& table);
+	void fillActiveEdgesTable(int x0, int y0, int x1, int y1, int min_y, int max_y, std::vector<Cells>& table);
 	void drawtriangle(int x1, int y1, int x2, int y2, int x3, int y3, const Color& color, bool fill);
+	void fillTriangleWithTexture(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 uv0, Vector2 uv1, Vector2 uv2, const Image& texture);
 
 	//used to easy code
 	#ifndef IGNORE_LAMBDAS

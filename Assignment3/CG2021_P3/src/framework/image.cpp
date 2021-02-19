@@ -361,6 +361,19 @@ void Image::bresenhamUndoLineTransform(int* x, int* y, int octant){
 	}
 }
 
+void Image::drawLineFastBresenham( int x0 , int y0 , int x1 , int y1, const Color& color) {
+	int dx = std::abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+	int dy = std::abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+	int err = ( dx > dy ? dx : -dy ) / 2 , e2 ;
+	for ( ; ; ) {
+		setPixelSafe(x0, y0, color);
+		if (x0 == x1 && y0 == y1) break;
+		e2 = err;
+		if ( e2 > -dx ) { err -= dy ; x0 += sx ; }
+		if ( e2 < dy ) { err += dx ; y0 += sy ; }
+	}
+}
+
 void Image::drawLineDDA(int x1, int y1, int x2, int y2, const Color& color) {
 	float x, y;
 	float dx = (x2 - x1);
@@ -378,27 +391,31 @@ void Image::drawLineDDA(int x1, int y1, int x2, int y2, const Color& color) {
 	}
 }
 
-void Image::drawLineDDA_table(int x0, int y0, int x1, int y1, std::vector<Cells>& table) {
-	float x, y;
-	float dx = (x1 - x0);
+void Image::fillActiveEdgesTable(int x0, int y0, int x1, int y1, int min_y, int max_y, std::vector<Cells>& table) {
+	float x = x0;
 	float dy = (y1 - y0);
-	float d = fabs(dx) >= fabs(dy) ? fabs(dx) : fabs(dy);
-	float vx = dx / d;
-	float vy = dy / d;
-	x = x0;
-	y = y0;
-	for (int i = 0; i <= d; i++)
-	{
-		x = x + vx;
-		y = y + vy;
-		if (x < table[y].minx)
-		{
-			table[y].minx = x;
+
+	if (dy != 0){
+		float step_y = dy > 0? 1 : -1;
+		float step_x = (x1 - x0) / std::abs(dy);
+		for (int y = y0; y != y1; y+=step_y){
+			x += step_x;
+			int table_index = y - min_y;
+
+			if (x < table[table_index].minx){
+				table[table_index].minx = x;
+			}
+			if (x > table[table_index].maxx){
+				table[table_index].maxx = x;
+			}
 		}
-		if (x > table[y].maxx)
-		{
-			table[y].maxx = x;
-		}
+	}
+	else { // handle horizontal line case
+		int min_x = std::min(x0, x1);
+		int max_x = std::max(x0, x1);
+		int table_index = y0 - min_y;
+		table[table_index].minx = std::min(min_x, table[table_index].minx);
+		table[table_index].maxx = std::max(max_x, table[table_index].maxx);
 	}
 }
 
@@ -412,9 +429,9 @@ void Image::drawtriangle(int x1, int y1, int x2, int y2, int x3, int y3, const C
 			table[i].minx = 100000; //very big number
 			table[i].maxx = -100000; //very small number
 		}
-		drawLineDDA_table(x1, y1, x2, y2, table);
-		drawLineDDA_table(x2, y2, x3, y3, table);
-		drawLineDDA_table(x3, y3, x1, y1, table);
+		fillActiveEdgesTable(x1, y1, x2, y2, 0, height,table);
+		fillActiveEdgesTable(x2, y2, x3, y3, 0, height, table);
+		fillActiveEdgesTable(x3, y3, x1, y1, 0, height, table);
 
 		for (int i = 0; i < table.size(); i++)
 		{
@@ -433,6 +450,59 @@ void Image::drawtriangle(int x1, int y1, int x2, int y2, int x3, int y3, const C
 		drawLineBresenham(x1, y1, x2, y2, color);
 		drawLineBresenham(x2, y2, x3, y3, color);
 		drawLineBresenham(x3, y3, x1, y1, color);
+	}
+
+}
+
+void Image::fillTriangleWithTexture(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 uv0, Vector2 uv1, Vector2 uv2, const Image& texture){
+	int min_y = std::min(std::min(p0.y, p1.y), p2.y);
+	int max_y = std::max(std::max(p0.y, p1.y), p2.y);
+
+	int table_height = max_y - min_y + 1;
+
+	std::vector<Cells> table(table_height);
+	for (int i = 0; i < table.size(); i++) {
+		table[i].minx = 100000; //very big number todo: change to std::numeric_limits<int>.max()...
+		table[i].maxx = -100000; //very small number
+	}
+	
+	// fill table
+	fillActiveEdgesTable(p0.x, p0.y, p1.x, p1.y, min_y, max_y, table);
+	fillActiveEdgesTable(p1.x, p1.y, p2.x, p2.y, min_y, max_y, table);
+	fillActiveEdgesTable(p2.x, p2.y, p0.x, p0.y, min_y, max_y, table);
+
+	Vector2 p;
+	Vector2 v0, v1, v2;
+	for (int py = min_y; py <= max_y; py++){
+		for (int px = table[py - min_y].minx; px <= table[py - min_y].maxx; px++){
+			//assuming p0,p1 and p2 are the vertices 2D
+			p.set(px, py);
+			v0 = p1 - p0; 
+			v1 = p2 - p0;
+			v2 = p - p0; //p is the x,y of the pixel
+
+
+			//computing the dot of a vector with itself
+			//is the same as length*length but faster
+			float d00 = v0.dot(v0);
+			float d01 = v0.dot(v1);
+			float d11 = v1.dot(v1);
+			float d20 = v2.dot(v0);
+			float d21 = v2.dot(v1);
+			float denom = d00 * d11 - d01 * d01;
+			float v = (d11 * d20 - d01 * d21) / denom;
+			float w = (d00 * d21 - d01 * d20) / denom;
+			float u = 1.0 - v - w;
+		
+			//use weights to compute final uv
+			Vector2 uv = uv0 * u + uv1 * v + uv2 * w;
+			//std::cout<<uv.x<<" "<<uv.y<< std::endl;
+			if (uv.x < 0 || uv.x > 1 || uv.y < 0 || uv.y > 1)
+				continue;
+			
+			// scale coords and set pixel
+			setPixelSafe(p.x, p.y, texture.getPixel(uv.x * texture.width, uv.y * texture.height));
+		}
 	}
 
 }

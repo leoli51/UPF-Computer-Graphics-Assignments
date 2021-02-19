@@ -34,7 +34,7 @@ void Application::init(void)
 	
 	//here we create a global camera and set a position and projection properties
 	camera = new Camera();
-	camera->lookAt(Vector3(0,10,-100),Vector3(0,0,0),Vector3(0,1,0)); //define eye,center,up
+	camera->lookAt(Vector3(0,10,50),Vector3(0,0,0),Vector3(0,1,0)); //define eye,center,up
 	camera->perspective(60, window_width / (float)window_height, 0.1, 10000); //define fov,aspect,near,far
 
 	//load a mesh
@@ -73,14 +73,13 @@ void Application::init(void)
 void Application::render(Image& framebuffer)
 {
 	framebuffer.fill(Color(40, 45, 60)); //clear
-	std::cout<<camera->eye.x<<" "<<camera->eye.y<<" "<<camera->eye.z<<std::endl;
 	//for every point of the mesh (to draw triangles take three points each time and connect the points between them (1,2,3,   4,5,6,   ...)
-	for (int i = 0; i < mesh->vertices.size() / 100; i+=3)
+	for (int i = 0; i < mesh->vertices.size(); i+=3)
 	{
 		Vector3 v0 = mesh->vertices[i]; //extract vertex from mesh
 		Vector3 v1 = mesh->vertices[i + 1]; //extract vertex from mesh
 		Vector3 v2 = mesh->vertices[i + 2]; //extract vertex from mesh
-
+	
 		//Vector2 texcoord = mesh->uvs[i]; //texture coordinate of the vertex (they are normalized, from 0,0 to 1,1)
 
 		//project every point in the mesh to normalized coordinates using the viewprojection_matrix inside camera
@@ -97,8 +96,13 @@ void Application::render(Image& framebuffer)
 		v2.y = (v2.y + 1.0) / 2.0 * framebuffer.height;
 
 		//paint points in framebuffer (using your drawTriangle function or the fillTriangle function)
-		framebuffer.drawtriangle(v0.x, v0.y, v1.x, v1.y, v2.x, v2.y, Color::WHITE, false);
+		//framebuffer.drawtriangle(v0.x, v0.y, v1.x, v1.y, v2.x, v2.y, Color::WHITE, false);
+		//std::cout<<"Started to paint triangle "<<(i+1) / 3<< std::endl;
+		framebuffer.fillTriangleWithTexture(Vector2(v0.x, v0.y), Vector2(v1.x, v1.y), Vector2(v2.x, v2.y), mesh->uvs[i], mesh->uvs[i+1], mesh->uvs[i+2], *texture);
+		//std::cout<<"Painted triangle "<<(i+1) / 3<< std::endl;
 	}
+	//std::cout<<"Finished!"<<std::endl;
+
 }
 
 //called after render
@@ -111,26 +115,33 @@ void Application::update(double seconds_elapsed)
 	}
 
 	//example to move eye
+	Vector3 move_vector(0,0,0);
 	if (keystate[SDL_SCANCODE_LEFT])
-		camera->eye.x -= move_velocity * seconds_elapsed;
+		move_vector.x = -1;
 	if (keystate[SDL_SCANCODE_RIGHT])
-		camera->eye.x += move_velocity * seconds_elapsed;
+		move_vector.x = 1;
 	if (keystate[SDL_SCANCODE_DOWN])
-		camera->eye.y -= move_velocity * seconds_elapsed;
+		move_vector.y = -1;
 	if (keystate[SDL_SCANCODE_UP])
-		camera->eye.y += move_velocity * seconds_elapsed;
+		move_vector.y = 1;
 	if (keystate[SDL_SCANCODE_Z])
-		camera->eye.z -= move_velocity * seconds_elapsed;
+		move_vector.z = -1;
 	if (keystate[SDL_SCANCODE_X])
-		camera->eye.z += move_velocity * seconds_elapsed;
-	
-	camera->center = Vector3(0,0,10);
+		move_vector.z = 1;
+
+	camera->eye += move_vector * move_velocity * seconds_elapsed;
+	//camera->center = camera->view_matrix.frontVector();
 	camera->center.x += mouse_sensitivity * mouse_delta.x;
 	camera->center.y += mouse_sensitivity * mouse_delta.y;
 
 	//if we modify the camera fields, then update matrices
 	camera->updateViewMatrix();
 	camera->updateProjectionMatrix();
+
+	//std::cout<<"---"<<std::endl;
+	//std::cout<<camera->eye.x<<" "<<camera->eye.y<<" "<<camera->eye.z<<std::endl;
+	//std::cout<<camera->view_matrix.rightVector().x<<" "<<camera->view_matrix.rightVector().y<<" "<<camera->view_matrix.rightVector().z<<std::endl;
+	//std::cout<<camera->center.x<<" "<<camera->center.y<<" "<<camera->center.z<<std::endl;
 }
 
 //keyboard press event 

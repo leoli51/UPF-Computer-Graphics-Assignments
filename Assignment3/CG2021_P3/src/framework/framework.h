@@ -88,6 +88,13 @@ public:
 
 	Vector3 cross( const Vector3& v ) const;
 	float dot( const Vector3& v ) const;
+
+	// useful operators
+	void operator += (const Vector3& v) { x += v.x; y += v.y; z += v.z; }
+	void operator -= (const Vector3& v) { x -= v.x; y -= v.y; z -= v.z; }
+
+	Vector3 operator * (float v) { return Vector3(x*v, y*v, z*v); }
+
 };
 
 
