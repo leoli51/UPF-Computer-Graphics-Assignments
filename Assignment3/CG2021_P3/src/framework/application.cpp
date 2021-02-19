@@ -3,6 +3,9 @@
 #include "image.h"
 #include "mesh.h"
 
+// application variables
+int app_state = 1;
+
 // camera position variables
 float move_velocity = 50;
 float mouse_sensitivity = 0.05;
@@ -96,10 +99,16 @@ void Application::render(Image& framebuffer)
 		v2.y = (v2.y + 1.0) / 2.0 * framebuffer.height;
 
 		//paint points in framebuffer (using your drawTriangle function or the fillTriangle function)
-		//framebuffer.drawtriangle(v0.x, v0.y, v1.x, v1.y, v2.x, v2.y, Color::WHITE, false);
-		//std::cout<<"Started to paint triangle "<<(i+1) / 3<< std::endl;
-		framebuffer.fillTriangleWithTexture(Vector2(v0.x, v0.y), Vector2(v1.x, v1.y), Vector2(v2.x, v2.y), mesh->uvs[i], mesh->uvs[i+1], mesh->uvs[i+2], *texture);
-		//std::cout<<"Painted triangle "<<(i+1) / 3<< std::endl;
+		switch (app_state){
+			case 1: 
+				framebuffer.drawLineBresenham(v0.x, v0.y, v1.x, v1.y, Color::WHITE);
+				framebuffer.drawLineBresenham(v1.x, v1.y, v2.x, v2.y, Color::WHITE);
+				framebuffer.drawLineBresenham(v2.x, v2.y, v0.x, v0.y, Color::WHITE);
+				break;
+			case 4:
+				framebuffer.fillTriangleWithTexture(Vector2(v0.x, v0.y), Vector2(v1.x, v1.y), Vector2(v2.x, v2.y), mesh->uvs[i], mesh->uvs[i+1], mesh->uvs[i+2], *texture);
+				break;
+		}
 	}
 	//std::cout<<"Finished!"<<std::endl;
 
@@ -130,18 +139,12 @@ void Application::update(double seconds_elapsed)
 		move_vector.z = 1;
 
 	camera->eye += move_vector * move_velocity * seconds_elapsed;
-	//camera->center = camera->view_matrix.frontVector();
-	camera->center.x += mouse_sensitivity * mouse_delta.x;
-	camera->center.y += mouse_sensitivity * mouse_delta.y;
+	//camera->center = camera->view_matrix.frontVector() + camera->eye;
+
 
 	//if we modify the camera fields, then update matrices
 	camera->updateViewMatrix();
 	camera->updateProjectionMatrix();
-
-	//std::cout<<"---"<<std::endl;
-	//std::cout<<camera->eye.x<<" "<<camera->eye.y<<" "<<camera->eye.z<<std::endl;
-	//std::cout<<camera->view_matrix.rightVector().x<<" "<<camera->view_matrix.rightVector().y<<" "<<camera->view_matrix.rightVector().z<<std::endl;
-	//std::cout<<camera->center.x<<" "<<camera->center.y<<" "<<camera->center.z<<std::endl;
 }
 
 //keyboard press event 
@@ -149,7 +152,12 @@ void Application::onKeyDown( SDL_KeyboardEvent event )
 {
 	//to see all the keycodes: https://wiki.libsdl.org/SDL_Keycode
 	switch (event.keysym.scancode)
-	{
+	{	
+		case SDL_SCANCODE_1: app_state = 1; break;
+		case SDL_SCANCODE_2: app_state = 2; break;
+		case SDL_SCANCODE_3: app_state = 3; break;
+		case SDL_SCANCODE_4: app_state = 4; break;
+		
 		case SDL_SCANCODE_ESCAPE: exit(0); break; //ESC key, kill the app
 	}
 }
