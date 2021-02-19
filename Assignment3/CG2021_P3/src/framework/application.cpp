@@ -8,7 +8,7 @@ int app_state = 1;
 
 // camera position variables
 float move_velocity = 50;
-float mouse_sensitivity = 0.05;
+float look_velocity = 10;
 
 
 Application::Application(const char* caption, int width, int height)
@@ -37,7 +37,7 @@ void Application::init(void)
 	
 	//here we create a global camera and set a position and projection properties
 	camera = new Camera();
-	camera->lookAt(Vector3(0,10,50),Vector3(0,0,0),Vector3(0,1,0)); //define eye,center,up
+	camera->lookAt(Vector3(0,0,40),Vector3(0,0,0),Vector3(0,1,0)); //define eye,center,up
 	camera->perspective(60, window_width / (float)window_height, 0.1, 10000); //define fov,aspect,near,far
 
 	//load a mesh
@@ -125,6 +125,7 @@ void Application::update(double seconds_elapsed)
 
 	//example to move eye
 	Vector3 move_vector(0,0,0);
+	Vector3 center_move_vector(0,0,0);
 	if (keystate[SDL_SCANCODE_LEFT])
 		move_vector.x = -1;
 	if (keystate[SDL_SCANCODE_RIGHT])
@@ -137,8 +138,17 @@ void Application::update(double seconds_elapsed)
 		move_vector.z = -1;
 	if (keystate[SDL_SCANCODE_X])
 		move_vector.z = 1;
+	if (keystate[SDL_SCANCODE_D])
+		center_move_vector.x = 1;
+	if (keystate[SDL_SCANCODE_A])
+		center_move_vector.x = -1;
+	if (keystate[SDL_SCANCODE_S])
+		center_move_vector.y = -1;
+	if (keystate[SDL_SCANCODE_W])
+		center_move_vector.y = 1;
 
 	camera->eye += move_vector * move_velocity * seconds_elapsed;
+	camera->center += center_move_vector * look_velocity * seconds_elapsed;
 	//camera->center = camera->view_matrix.frontVector() + camera->eye;
 
 
