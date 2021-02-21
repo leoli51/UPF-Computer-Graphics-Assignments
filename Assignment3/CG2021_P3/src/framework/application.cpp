@@ -11,6 +11,8 @@ float move_velocity = 50;
 float look_velocity = 10;
 
 
+
+
 Application::Application(const char* caption, int width, int height)
 {
 	this->window = createWindow(caption, width, height);
@@ -18,8 +20,8 @@ Application::Application(const char* caption, int width, int height)
 	// initialize attributes
 	// Warning: DO NOT CREATE STUFF HERE, USE THE INIT 
 	// things create here cannot access opengl
-	int w,h;
-	SDL_GetWindowSize(window,&w,&h);
+	int w, h;
+	SDL_GetWindowSize(window, &w, &h);
 
 	this->window_width = w;
 	this->window_height = h;
@@ -34,55 +36,164 @@ Application::Application(const char* caption, int width, int height)
 void Application::init(void)
 {
 	std::cout << "initiating app..." << std::endl;
-	
+
 	//here we create a global camera and set a position and projection properties
 	camera = new Camera();
-	camera->lookAt(Vector3(0,0,40),Vector3(0,0,0),Vector3(0,1,0)); //define eye,center,up
+	camera->lookAt(Vector3(0, 0, 40), Vector3(0, 0, 0), Vector3(0, 1, 0)); //define eye,center,up
 	camera->perspective(60, window_width / (float)window_height, 0.1, 10000); //define fov,aspect,near,far
 
 	//load a mesh
 	mesh = new Mesh();
-	if( !mesh->loadOBJ("lee.obj") )
+	if (!mesh->loadOBJ("lee.obj"))
 		std::cout << "FILE Lee.obj NOT FOUND" << std::endl;
 
 	//load the texture
 	texture = new Image();
 	texture->loadTGA("color.tga");
+
+
 }
 
 //this function fills the triangle by computing the bounding box of the triangle in screen space and using the barycentric interpolation
-//to check which pixels are inside the triangle. It is slow for big triangles, but faster for small triangles /void Application::fillTriangle(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector2& uv0, const Vector2& uv1, const Vector2& uv2)
-//{
+//to check which pixels are inside the triangle. It is slow for big triangles, but faster for small triangles 
+void Application::fillTriangle(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector2& uv0, const Vector2& uv1, const Vector2& uv2)
+{
 	//compute triangle bounding box in screen space
+	int minx, maxx, miny, maxy;
+	// x
+	if (p1.x < p0.x)
+	{
+		minx = p1.x;
+		maxx = p0.x;
+	}
+	else
+	{
+		minx = p0.x;
+		maxx = p1.x;
+	}
+	if (p2.x < minx)
+	{
+		minx = p2.x;
+	}
+	if (p2.x > maxx)
+	{
+		maxx = p2.x;
+	}
+	// y
+	if (p1.y < p0.y)
+	{
+		miny = p1.y;
+		maxy = p0.y;
+	}
+	else
+	{
+		miny = p0.y;
+		maxy = p1.y;
+	}
+	if (p2.y < miny)
+	{
+		miny = p2.y;
+	}
+	if (p2.x > maxy)
+	{
+		maxy = p2.y;
+	}
 
 	//clamp to screen area
+	if (maxx > window_width)
+	{
+		minx = maxx;
+	}
+	if (maxy > window_height)
+	{
+		miny = maxy;
+	}
+	if (minx < 0)
+	{
+		minx = maxx;
+	}
+	if (miny < 0)
+	{
+		miny = maxy;
+	}
+
 
 	//loop all pixels inside bounding box
-	// for()
+	for (int x = minx; x < maxx; x++)
+	{
+		for (int y = miny; y < maxy; y++)
+		{
+			//we must compute the barycentrinc interpolation coefficients, weights of pixel P(x,y)
+			Vector2 v0;
+			v0.x = p2.x - p0.x;
+			v0.y = p2.y - p0.y;
+			Vector2 v1;
+			v1.x = p1.x - p0.x;
+			v1.y = p1.y - p0.y;
+			Vector2 v2;
+			v2.x = x - p0.x;
+			v2.y = y - p0.y;
 
-		//we must compute the barycentrinc interpolation coefficients, weights of pixel P(x,y)
 
-		//check if pixel is inside or outside the triangle
+			float d00 = v0.dot(v0);
+			float d01 = v0.dot(v1);
+			float d11 = v1.dot(v1);
+			float d20 = v2.dot(v0);
+			float d21 = v2.dot(v1);
+			float denom = d00 * d11 - d01 * d01;
+			float v = (d11 * d20 - d01 * d21) / denom;
+			float w = (d00 * d21 - d01 * d20) / denom;
+			float u = 1.0 - v - w;
 
-		//here add your code to test occlusions based on the Z of the vertices and the pixel (TASK 5)
+			//check if pixel is inside or outside the triangle
+			if (u < 0 || v < 0 || w < 0)
+				continue;
+			//here add your code to test occlusions based on the Z of the vertices and the pixel (TASK 5)
+			float z;
+			z = p0.z * u + p1.z * v + p2.z * w;
+			if (z > zbuffer.getPixel(x,y))
+			{
+				continue;
+			}
+			else
+			{
+				Vector2 uv = uv0 * u + uv1 * v + uv2 * w;
 
-		//here add your code to compute the color of the pixel (barycentric interpolation) (TASK 4)
+				zbuffer.setPixel(x, y, z);
+			}
+			
+			//here add your code to compute the color of the pixel (barycentric interpolation) (TASK 4)
+			Color c;
+			c = Color::RED * u + Color::GREEN * v + Color::BLUE * w;
+			//draw the pixels in the colorbuffer x,y 
 
-		//draw the pixels in the colorbuffer x,y 
-		//framebuffer.setPixel(x, y, COMPUTED COLOR);
-//}
+			framebuffer.setPixel(x, y, c);
+
+		}
+	}
+}
 
 //render one frame
 void Application::render(Image& framebuffer)
 {
 	framebuffer.fill(Color(40, 45, 60)); //clear
+	//set zbuffer
+	for (int x = 0; x < zbuffer.width; x++)
+	{
+		for (int y = 0; y < zbuffer.height; y++)
+		{
+			//give a huge number
+			zbuffer.setPixel(x, y, 100000);
+		}
+	}
+
 	//for every point of the mesh (to draw triangles take three points each time and connect the points between them (1,2,3,   4,5,6,   ...)
-	for (int i = 0; i < mesh->vertices.size(); i+=3)
+	for (int i = 0; i < mesh->vertices.size(); i += 3)
 	{
 		Vector3 v0 = mesh->vertices[i]; //extract vertex from mesh
 		Vector3 v1 = mesh->vertices[i + 1]; //extract vertex from mesh
 		Vector3 v2 = mesh->vertices[i + 2]; //extract vertex from mesh
-	
+
 		//Vector2 texcoord = mesh->uvs[i]; //texture coordinate of the vertex (they are normalized, from 0,0 to 1,1)
 
 		//project every point in the mesh to normalized coordinates using the viewprojection_matrix inside camera
@@ -99,15 +210,18 @@ void Application::render(Image& framebuffer)
 		v2.y = (v2.y + 1.0) / 2.0 * framebuffer.height;
 
 		//paint points in framebuffer (using your drawTriangle function or the fillTriangle function)
-		switch (app_state){
-			case 1: 
-				framebuffer.drawLineBresenham(v0.x, v0.y, v1.x, v1.y, Color::WHITE);
-				framebuffer.drawLineBresenham(v1.x, v1.y, v2.x, v2.y, Color::WHITE);
-				framebuffer.drawLineBresenham(v2.x, v2.y, v0.x, v0.y, Color::WHITE);
-				break;
-			case 4:
-				framebuffer.fillTriangleWithTexture(Vector2(v0.x, v0.y), Vector2(v1.x, v1.y), Vector2(v2.x, v2.y), mesh->uvs[i], mesh->uvs[i+1], mesh->uvs[i+2], *texture);
-				break;
+		switch (app_state) {
+		case 1:
+			framebuffer.drawLineBresenham(v0.x, v0.y, v1.x, v1.y, Color::WHITE);
+			framebuffer.drawLineBresenham(v1.x, v1.y, v2.x, v2.y, Color::WHITE);
+			framebuffer.drawLineBresenham(v2.x, v2.y, v0.x, v0.y, Color::WHITE);
+			break;
+		case 3:
+			fillTriangle(v0, v1, v2, mesh->uvs[i], mesh->uvs[i + 1], mesh->uvs[i + 2]);
+			break;
+		case 4:
+			framebuffer.fillTriangleWithTexture(Vector2(v0.x, v0.y), Vector2(v1.x, v1.y), Vector2(v2.x, v2.y), mesh->uvs[i], mesh->uvs[i + 1], mesh->uvs[i + 2], *texture);
+			break;
 		}
 	}
 	//std::cout<<"Finished!"<<std::endl;
@@ -124,8 +238,8 @@ void Application::update(double seconds_elapsed)
 	}
 
 	//example to move eye
-	Vector3 move_vector(0,0,0);
-	Vector3 center_move_vector(0,0,0);
+	Vector3 move_vector(0, 0, 0);
+	Vector3 center_move_vector(0, 0, 0);
 	if (keystate[SDL_SCANCODE_LEFT])
 		move_vector.x = -1;
 	if (keystate[SDL_SCANCODE_RIGHT])
@@ -158,17 +272,17 @@ void Application::update(double seconds_elapsed)
 }
 
 //keyboard press event 
-void Application::onKeyDown( SDL_KeyboardEvent event )
+void Application::onKeyDown(SDL_KeyboardEvent event)
 {
 	//to see all the keycodes: https://wiki.libsdl.org/SDL_Keycode
 	switch (event.keysym.scancode)
-	{	
-		case SDL_SCANCODE_1: app_state = 1; break;
-		case SDL_SCANCODE_2: app_state = 2; break;
-		case SDL_SCANCODE_3: app_state = 3; break;
-		case SDL_SCANCODE_4: app_state = 4; break;
-		
-		case SDL_SCANCODE_ESCAPE: exit(0); break; //ESC key, kill the app
+	{
+	case SDL_SCANCODE_1: app_state = 1; break;
+	case SDL_SCANCODE_2: app_state = 2; break;
+	case SDL_SCANCODE_3: app_state = 3; break;
+	case SDL_SCANCODE_4: app_state = 4; break;
+
+	case SDL_SCANCODE_ESCAPE: exit(0); break; //ESC key, kill the app
 	}
 }
 
@@ -182,7 +296,7 @@ void Application::onKeyUp(SDL_KeyboardEvent event)
 }
 
 //mouse button event
-void Application::onMouseButtonDown( SDL_MouseButtonEvent event )
+void Application::onMouseButtonDown(SDL_MouseButtonEvent event)
 {
 	if (event.button == SDL_BUTTON_LEFT) //left mouse pressed
 	{
@@ -190,7 +304,7 @@ void Application::onMouseButtonDown( SDL_MouseButtonEvent event )
 	}
 }
 
-void Application::onMouseButtonUp( SDL_MouseButtonEvent event )
+void Application::onMouseButtonUp(SDL_MouseButtonEvent event)
 {
 	if (event.button == SDL_BUTTON_LEFT) //left mouse unpressed
 	{
