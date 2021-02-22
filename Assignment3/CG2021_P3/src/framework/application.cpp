@@ -54,125 +54,6 @@ void Application::init(void)
 
 }
 
-//this function fills the triangle by computing the bounding box of the triangle in screen space and using the barycentric interpolation
-//to check which pixels are inside the triangle. It is slow for big triangles, but faster for small triangles 
-void Application::fillTriangle(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector2& uv0, const Vector2& uv1, const Vector2& uv2)
-{
-	//compute triangle bounding box in screen space
-	int minx, maxx, miny, maxy;
-	// x
-	if (p1.x < p0.x)
-	{
-		minx = p1.x;
-		maxx = p0.x;
-	}
-	else
-	{
-		minx = p0.x;
-		maxx = p1.x;
-	}
-	if (p2.x < minx)
-	{
-		minx = p2.x;
-	}
-	if (p2.x > maxx)
-	{
-		maxx = p2.x;
-	}
-	// y
-	if (p1.y < p0.y)
-	{
-		miny = p1.y;
-		maxy = p0.y;
-	}
-	else
-	{
-		miny = p0.y;
-		maxy = p1.y;
-	}
-	if (p2.y < miny)
-	{
-		miny = p2.y;
-	}
-	if (p2.x > maxy)
-	{
-		maxy = p2.y;
-	}
-
-	//clamp to screen area
-	if (maxx > window_width)
-	{
-		minx = maxx;
-	}
-	if (maxy > window_height)
-	{
-		miny = maxy;
-	}
-	if (minx < 0)
-	{
-		minx = maxx;
-	}
-	if (miny < 0)
-	{
-		miny = maxy;
-	}
-
-
-	//loop all pixels inside bounding box
-	for (int x = minx; x < maxx; x++)
-	{
-		for (int y = miny; y < maxy; y++)
-		{
-			//we must compute the barycentrinc interpolation coefficients, weights of pixel P(x,y)
-			Vector2 v0;
-			v0.x = p2.x - p0.x;
-			v0.y = p2.y - p0.y;
-			Vector2 v1;
-			v1.x = p1.x - p0.x;
-			v1.y = p1.y - p0.y;
-			Vector2 v2;
-			v2.x = x - p0.x;
-			v2.y = y - p0.y;
-
-
-			float d00 = v0.dot(v0);
-			float d01 = v0.dot(v1);
-			float d11 = v1.dot(v1);
-			float d20 = v2.dot(v0);
-			float d21 = v2.dot(v1);
-			float denom = d00 * d11 - d01 * d01;
-			float v = (d11 * d20 - d01 * d21) / denom;
-			float w = (d00 * d21 - d01 * d20) / denom;
-			float u = 1.0 - v - w;
-
-			//check if pixel is inside or outside the triangle
-			if (u < 0 || v < 0 || w < 0)
-				continue;
-			//here add your code to test occlusions based on the Z of the vertices and the pixel (TASK 5)
-			float z;
-			z = p0.z * u + p1.z * v + p2.z * w;
-			if (z > zbuffer.getPixel(x,y))
-			{
-				continue;
-			}
-			else
-			{
-				Vector2 uv = uv0 * u + uv1 * v + uv2 * w;
-
-				zbuffer.setPixel(x, y, z);
-			}
-			
-			//here add your code to compute the color of the pixel (barycentric interpolation) (TASK 4)
-			Color c;
-			c = Color::RED * u + Color::GREEN * v + Color::BLUE * w;
-			//draw the pixels in the colorbuffer x,y 
-
-			framebuffer.setPixel(x, y, c);
-
-		}
-	}
-}
-
 //render one frame
 void Application::render(Image& framebuffer)
 {
@@ -217,10 +98,10 @@ void Application::render(Image& framebuffer)
 			framebuffer.drawLineBresenham(v2.x, v2.y, v0.x, v0.y, Color::WHITE);
 			break;
 		case 3:
-			fillTriangle(v0, v1, v2, mesh->uvs[i], mesh->uvs[i + 1], mesh->uvs[i + 2]);
+			framebuffer.fillTriangleWithColor(v0, v1, v2, Color::RED, Color::GREEN, Color::BLUE, zbuffer);
 			break;
 		case 4:
-			framebuffer.fillTriangleWithTexture(Vector2(v0.x, v0.y), Vector2(v1.x, v1.y), Vector2(v2.x, v2.y), mesh->uvs[i], mesh->uvs[i + 1], mesh->uvs[i + 2], *texture);
+			framebuffer.fillTriangleWithTexture(v0, v1, v2, mesh->uvs[i], mesh->uvs[i + 1], mesh->uvs[i + 2], *texture, zbuffer);
 			break;
 		}
 	}

@@ -420,41 +420,48 @@ void Image::fillActiveEdgesTable(int x0, int y0, int x1, int y1, int min_y, int 
 }
 
 
-void Image::drawtriangle(int x1, int y1, int x2, int y2, int x3, int y3, const Color& color, bool fill) {
-	if (fill)
-	{
-		std::vector<Cells> table;
-		table.resize(height);
-		for (int i = 0; i < table.size(); i++) {
-			table[i].minx = 100000; //very big number
-			table[i].maxx = -100000; //very small number
-		}
-		fillActiveEdgesTable(x1, y1, x2, y2, 0, height,table);
-		fillActiveEdgesTable(x2, y2, x3, y3, 0, height, table);
-		fillActiveEdgesTable(x3, y3, x1, y1, 0, height, table);
+void Image::fillTriangleWithColor(Vector3 p0, Vector3 p1, Vector3 p2, const Color& color0, const Color& color1, const Color& color2, FloatImage& zbuffer) {
+	int min_y = std::min(std::min(p0.y, p1.y), p2.y);
+	int max_y = std::max(std::max(p0.y, p1.y), p2.y);
 
-		for (int i = 0; i < table.size(); i++)
-		{
-			if (table[i].minx < table[i].maxx)
-			{
-				for (int start = table[i].minx; start <= table[i].maxx; start++)
-				{
-					setPixelSafe(start, i, color);
-				}
-			}
+	int table_height = max_y - min_y + 1;
 
-		}
+	std::vector<Cells> table(table_height);
+	for (int i = 0; i < table.size(); i++) {
+		table[i].minx = 100000; //very big number todo: change to std::numeric_limits<int>.max()...
+		table[i].maxx = -100000; //very small number
 	}
-	else
-	{
-		drawLineBresenham(x1, y1, x2, y2, color);
-		drawLineBresenham(x2, y2, x3, y3, color);
-		drawLineBresenham(x3, y3, x1, y1, color);
+
+	// fill table
+	fillActiveEdgesTable(p0.x, p0.y, p1.x, p1.y, min_y, max_y, table);
+	fillActiveEdgesTable(p1.x, p1.y, p2.x, p2.y, min_y, max_y, table);
+	fillActiveEdgesTable(p2.x, p2.y, p0.x, p0.y, min_y, max_y, table);
+
+	Vector3 p;
+	for (int py = min_y; py <= max_y; py++){
+		for (int px = table[py - min_y].minx; px <= table[py - min_y].maxx; px++){
+			//assuming p0,p1 and p2 are the vertices 2D
+			p.set(px, py, 0);
+			Vector3 bc = barycentricCoordinates(p, p0, p1, p2);
+			p.z = p0.z * bc.x + p1.z * bc.y + p2.z * bc.z;
+
+			// check if pixel is out of view
+			if (p.z < 0 || p.x >= width || p.x < 0 || p.y >= height || p.y < 0)
+				continue;
+			// check if it occludes a pixel that is more in front
+			if (p.z < zbuffer.getPixel(p.x, p.y)){
+				zbuffer.setPixel(p.x, p.y, p.z);
+				// use barycentric coordinates to compute color
+				Color c = color0 * bc.x + color1 * bc.y + color2 * bc.z;
+				// scale coords and set pixel
+				setPixelSafe(p.x, p.y, c);
+			}
+		}
 	}
 
 }
 
-void Image::fillTriangleWithTexture(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 uv0, Vector2 uv1, Vector2 uv2, const Image& texture){
+void Image::fillTriangleWithTexture(Vector3 p0, Vector3 p1, Vector3 p2, Vector2 uv0, Vector2 uv1, Vector2 uv2, const Image& texture, FloatImage& zbuffer){
 	int min_y = std::min(std::min(p0.y, p1.y), p2.y);
 	int max_y = std::max(std::max(p0.y, p1.y), p2.y);
 
@@ -471,31 +478,15 @@ void Image::fillTriangleWithTexture(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 
 	fillActiveEdgesTable(p1.x, p1.y, p2.x, p2.y, min_y, max_y, table);
 	fillActiveEdgesTable(p2.x, p2.y, p0.x, p0.y, min_y, max_y, table);
 
-	Vector2 p;
-	Vector2 v0, v1, v2;
+	Vector3 p;
 	for (int py = min_y; py <= max_y; py++){
 		for (int px = table[py - min_y].minx; px <= table[py - min_y].maxx; px++){
 			//assuming p0,p1 and p2 are the vertices 2D
-			p.set(px, py);
-			v0 = p1 - p0; 
-			v1 = p2 - p0;
-			v2 = p - p0; //p is the x,y of the pixel
-
-
-			//computing the dot of a vector with itself
-			//is the same as length*length but faster
-			float d00 = v0.dot(v0);
-			float d01 = v0.dot(v1);
-			float d11 = v1.dot(v1);
-			float d20 = v2.dot(v0);
-			float d21 = v2.dot(v1);
-			float denom = d00 * d11 - d01 * d01;
-			float v = (d11 * d20 - d01 * d21) / denom;
-			float w = (d00 * d21 - d01 * d20) / denom;
-			float u = 1.0 - v - w;
+			p.set(px, py, 0);
+			Vector3 bc = barycentricCoordinates(p, p0, p1, p2);
 		
 			//use weights to compute final uv
-			Vector2 uv = uv0 * u + uv1 * v + uv2 * w;
+			Vector2 uv = uv0 * bc.x + uv1 * bc.y + uv2 * bc.z;
 			//std::cout<<uv.x<<" "<<uv.y<< std::endl;
 			if (uv.x < 0 || uv.x > 1 || uv.y < 0 || uv.y > 1)
 				continue;
