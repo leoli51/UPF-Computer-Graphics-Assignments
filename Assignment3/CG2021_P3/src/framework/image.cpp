@@ -485,7 +485,7 @@ void Image::fillTriangleWithTexture(Vector3 p0, Vector3 p1, Vector3 p2, Vector2 
 			p.set(px, py, 0);
 			Vector3 bc = barycentricCoordinates(p, p0, p1, p2);
 			p.z = p0.z * bc.x + p1.z * bc.y + p2.z * bc.z;
-			
+
 			//use weights to compute final uv
 			Vector2 uv = uv0 * bc.x + uv1 * bc.y + uv2 * bc.z;
 
@@ -496,7 +496,7 @@ void Image::fillTriangleWithTexture(Vector3 p0, Vector3 p1, Vector3 p2, Vector2 
 			if (p.z > 0 || p.x >= width || p.x < 0 || p.y >= height || p.y < 0)
 				continue;
 			// check if it occludes a pixel that is more in front
-			if (p.z > zbuffer.getPixel(p.x, p.y)){
+			if (p.z >= zbuffer.getPixel(p.x, p.y)){
 				zbuffer.setPixel(p.x, p.y, p.z);
 				// scale coords and set pixel
 				setPixel(p.x, p.y, texture.getPixel(uv.x * texture.width, uv.y * texture.height));

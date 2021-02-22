@@ -7,11 +7,10 @@
 int app_state = 1;
 
 // camera position variables
-float move_velocity = 50;
-float look_velocity = 10;
-
-
-
+const float move_velocity = 50;
+const float look_velocity = 10;
+const float fov_velocity = 5;
+const float min_fov = 5, max_fov = 120;
 
 Application::Application(const char* caption, int width, int height)
 {
@@ -50,8 +49,6 @@ void Application::init(void)
 	//load the texture
 	texture = new Image();
 	texture->loadTGA("color.tga");
-
-
 }
 
 //render one frame
@@ -96,10 +93,10 @@ void Application::render(Image& framebuffer)
 			framebuffer.drawLineBresenham(v1.x, v1.y, v2.x, v2.y, Color::WHITE);
 			framebuffer.drawLineBresenham(v2.x, v2.y, v0.x, v0.y, Color::WHITE);
 			break;
-		case 3:
+		case 2:
 			framebuffer.fillTriangleWithColor(v0, v1, v2, Color::RED, Color::GREEN, Color::BLUE, zbuffer);
 			break;
-		case 4:
+		case 3:
 			framebuffer.fillTriangleWithTexture(v0, v1, v2, mesh->uvs[i], mesh->uvs[i + 1], mesh->uvs[i + 2], *texture, zbuffer);
 			break;
 		}
@@ -128,10 +125,10 @@ void Application::update(double seconds_elapsed)
 		move_vector.y = -1;
 	if (keystate[SDL_SCANCODE_UP])
 		move_vector.y = 1;
-	if (keystate[SDL_SCANCODE_Z])
-		move_vector.z = -1;
-	if (keystate[SDL_SCANCODE_X])
-		move_vector.z = 1;
+	//if (keystate[SDL_SCANCODE_Z])
+	//	move_vector.z = -1;
+	//if (keystate[SDL_SCANCODE_X])
+	//	move_vector.z = 1;
 	if (keystate[SDL_SCANCODE_D])
 		center_move_vector.x = 1;
 	if (keystate[SDL_SCANCODE_A])
@@ -140,7 +137,12 @@ void Application::update(double seconds_elapsed)
 		center_move_vector.y = -1;
 	if (keystate[SDL_SCANCODE_W])
 		center_move_vector.y = 1;
+	if (keystate[SDL_SCANCODE_F])
+		camera->fov += seconds_elapsed * fov_velocity;
+	if (keystate[SDL_SCANCODE_G])
+		camera->fov -= seconds_elapsed * fov_velocity;
 
+	camera->fov = clamp(camera->fov, min_fov, max_fov);
 	camera->eye += move_vector * move_velocity * seconds_elapsed;
 	camera->center += center_move_vector * look_velocity * seconds_elapsed;
 	//camera->center = camera->view_matrix.frontVector() + camera->eye;
@@ -160,7 +162,6 @@ void Application::onKeyDown(SDL_KeyboardEvent event)
 	case SDL_SCANCODE_1: app_state = 1; break;
 	case SDL_SCANCODE_2: app_state = 2; break;
 	case SDL_SCANCODE_3: app_state = 3; break;
-	case SDL_SCANCODE_4: app_state = 4; break;
 
 	case SDL_SCANCODE_ESCAPE: exit(0); break; //ESC key, kill the app
 	}
