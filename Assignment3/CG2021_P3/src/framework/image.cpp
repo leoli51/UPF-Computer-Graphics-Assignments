@@ -411,18 +411,18 @@ void Image::fillActiveEdgesTable(int x0, int y0, int x1, int y1, int min_y, int 
 		}
 	}
 	else { // handle horizontal line case
-		int min_x = std::min(x0, x1);
-		int max_x = std::max(x0, x1);
+		int min_x = (std::min)(x0, x1);
+		int max_x = (std::max)(x0, x1);
 		int table_index = y0 - min_y;
-		table[table_index].minx = std::min(min_x, table[table_index].minx);
-		table[table_index].maxx = std::max(max_x, table[table_index].maxx);
+		table[table_index].minx = (std::min)(min_x, table[table_index].minx);
+		table[table_index].maxx = (std::max)(max_x, table[table_index].maxx);
 	}
 }
 
 
 void Image::fillTriangleWithColor(Vector3 p0, Vector3 p1, Vector3 p2, const Color& color0, const Color& color1, const Color& color2, FloatImage& zbuffer) {
-	int min_y = std::min(std::min(p0.y, p1.y), p2.y);
-	int max_y = std::max(std::max(p0.y, p1.y), p2.y);
+	int min_y = (std::min)((std::min)(p0.y, p1.y), p2.y);
+	int max_y = (std::max)((std::max)(p0.y, p1.y), p2.y);
 
 	int table_height = max_y - min_y + 1;
 
@@ -462,8 +462,8 @@ void Image::fillTriangleWithColor(Vector3 p0, Vector3 p1, Vector3 p2, const Colo
 }
 
 void Image::fillTriangleWithTexture(Vector3 p0, Vector3 p1, Vector3 p2, Vector2 uv0, Vector2 uv1, Vector2 uv2, const Image& texture, FloatImage& zbuffer){
-	int min_y = std::min(std::min(p0.y, p1.y), p2.y);
-	int max_y = std::max(std::max(p0.y, p1.y), p2.y);
+	int min_y = (std::min)((std::min)(p0.y, p1.y), p2.y);
+	int max_y = (std::max)((std::max)(p0.y, p1.y), p2.y);
 
 	int table_height = max_y - min_y + 1;
 

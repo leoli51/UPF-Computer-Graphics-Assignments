@@ -2,7 +2,6 @@
 #include "utils.h"
 
 #ifdef WIN32
-	#define NOMINMAX // makes sure std::min and std::max will work
 	#include <windows.h>
     #include <codecvt>
 

@@ -56,6 +56,7 @@ public:
 		this->window_height = height;
 		zbuffer.resize(width, height);
 		framebuffer.resize(width, height);
+		camera->perspective(camera->fov, window_width / (float)window_height, camera->near_plane, camera->far_plane); 
 	}
 
 	Vector2 getWindowSize()
