@@ -58,13 +58,13 @@ void Application::init(void)
 void Application::render(Image& framebuffer)
 {
 	framebuffer.fill(Color(40, 45, 60)); //clear
+
 	//set zbuffer
-	for (int x = 0; x < zbuffer.width; x++)
-	{
-		for (int y = 0; y < zbuffer.height; y++)
-		{
+	float max_depth = -(camera->far_plane + 1);
+	for (int x = 0; x < zbuffer.width; x++){
+		for (int y = 0; y < zbuffer.height; y++){
 			//give a huge number
-			zbuffer.setPixel(x, y, 100000);
+			zbuffer.setPixel(x, y, max_depth);
 		}
 	}
 
@@ -76,7 +76,6 @@ void Application::render(Image& framebuffer)
 		Vector3 v2 = mesh->vertices[i + 2]; //extract vertex from mesh
 
 		//Vector2 texcoord = mesh->uvs[i]; //texture coordinate of the vertex (they are normalized, from 0,0 to 1,1)
-
 		//project every point in the mesh to normalized coordinates using the viewprojection_matrix inside camera
 		v0 = camera->projectVector(v0);
 		v1 = camera->projectVector(v1);

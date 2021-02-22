@@ -446,10 +446,10 @@ void Image::fillTriangleWithColor(Vector3 p0, Vector3 p1, Vector3 p2, const Colo
 			p.z = p0.z * bc.x + p1.z * bc.y + p2.z * bc.z;
 
 			// check if pixel is out of view
-			if (p.z < 0 || p.x >= width || p.x < 0 || p.y >= height || p.y < 0)
+			if (p.z > 0 || p.x >= width || p.x < 0 || p.y >= height || p.y < 0)
 				continue;
 			// check if it occludes a pixel that is more in front
-			if (p.z < zbuffer.getPixel(p.x, p.y)){
+			if (p.z > zbuffer.getPixel(p.x, p.y)){
 				zbuffer.setPixel(p.x, p.y, p.z);
 				// use barycentric coordinates to compute color
 				Color c = color0 * bc.x + color1 * bc.y + color2 * bc.z;
@@ -487,12 +487,19 @@ void Image::fillTriangleWithTexture(Vector3 p0, Vector3 p1, Vector3 p2, Vector2 
 		
 			//use weights to compute final uv
 			Vector2 uv = uv0 * bc.x + uv1 * bc.y + uv2 * bc.z;
-			//std::cout<<uv.x<<" "<<uv.y<< std::endl;
+
+			// check if pixel uv is in coordinate range
 			if (uv.x < 0 || uv.x > 1 || uv.y < 0 || uv.y > 1)
 				continue;
-			
-			// scale coords and set pixel
-			setPixelSafe(p.x, p.y, texture.getPixel(uv.x * texture.width, uv.y * texture.height));
+			// check if pixel is out of view
+			if (p.z > 0 || p.x >= width || p.x < 0 || p.y >= height || p.y < 0)
+				continue;
+			// check if it occludes a pixel that is more in front
+			if (p.z > zbuffer.getPixel(p.x, p.y)){
+				zbuffer.setPixel(p.x, p.y, p.z);
+				// scale coords and set pixel
+				setPixelSafe(p.x, p.y, texture.getPixel(uv.x * texture.width, uv.y * texture.height));
+			}
 		}
 	}
 
