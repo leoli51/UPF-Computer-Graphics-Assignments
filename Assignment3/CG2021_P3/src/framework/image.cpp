@@ -454,7 +454,7 @@ void Image::fillTriangleWithColor(Vector3 p0, Vector3 p1, Vector3 p2, const Colo
 				// use barycentric coordinates to compute color
 				Color c = color0 * bc.x + color1 * bc.y + color2 * bc.z;
 				// scale coords and set pixel
-				setPixelSafe(p.x, p.y, c);
+				setPixel(p.x, p.y, c);
 			}
 		}
 	}
@@ -484,7 +484,8 @@ void Image::fillTriangleWithTexture(Vector3 p0, Vector3 p1, Vector3 p2, Vector2 
 			//assuming p0,p1 and p2 are the vertices 2D
 			p.set(px, py, 0);
 			Vector3 bc = barycentricCoordinates(p, p0, p1, p2);
-		
+			p.z = p0.z * bc.x + p1.z * bc.y + p2.z * bc.z;
+			
 			//use weights to compute final uv
 			Vector2 uv = uv0 * bc.x + uv1 * bc.y + uv2 * bc.z;
 
@@ -498,7 +499,7 @@ void Image::fillTriangleWithTexture(Vector3 p0, Vector3 p1, Vector3 p2, Vector2 
 			if (p.z > zbuffer.getPixel(p.x, p.y)){
 				zbuffer.setPixel(p.x, p.y, p.z);
 				// scale coords and set pixel
-				setPixelSafe(p.x, p.y, texture.getPixel(uv.x * texture.width, uv.y * texture.height));
+				setPixel(p.x, p.y, texture.getPixel(uv.x * texture.width, uv.y * texture.height));
 			}
 		}
 	}
