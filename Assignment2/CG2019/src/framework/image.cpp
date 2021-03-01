@@ -393,8 +393,8 @@ void Image::undoBresenhamLineTransform(int* x, int* y, int octant){
 void Image::drawCircleBresenham(int xc, int yc, int radius, const Color& c, bool fill){
 	// first point is (r,0)
 	// next we evaluate f(x, y) = x^2 + y^2 - r^2 on the midpoint: x -0.5 y + 1
-	// if the f(x+0.5, y+1) >= 0 it means the midpoint is outside the circle so we set the (x-1, y+1) pixel
-	// if the f(x+0.5, y+1) < 0 it means the midpoint is inside the circle so we set the (x, y+1) pixel
+	// if the f(x-0.5, y+1) >= 0 it means the midpoint is outside the circle so we set the (x-1, y+1) pixel
+	// if the f(x-0.5, y+1) < 0 it means the midpoint is inside the circle so we set the (x, y+1) pixel
 	// The pixel in the other octants are painted through reflection. 
 	int x = radius;
 	int y = 0;
