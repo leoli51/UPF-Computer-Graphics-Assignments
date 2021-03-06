@@ -25,6 +25,9 @@ Vector3 ambient_light(0.1,0.2,0.3); //here we can store the global ambient light
 
 float angle = 0;
 
+// Variables
+float seconds = 0;
+
 Application::Application(const char* caption, int width, int height)
 {
 	this->window = createWindow(caption, width, height);
@@ -59,7 +62,7 @@ void Application::init(void)
 	shader = Shader::Get( "../res/shaders/simple.vs", "../res/shaders/simple.fs" );
 
 	//load your Gouraud and Phong shaders here and stored them in some global variables
-	//...
+	gouraud_shader = Shader::Get("../res/shaders/Gouraud.vs", "../res/shaders/Gouraud.fs");
 
 	//CODE HERE:
 	//create a light (or several) and and some materials
@@ -84,18 +87,21 @@ void Application::render(void)
 	glDepthFunc(GL_LEQUAL); //Z will pass if the Z is LESS or EQUAL to the Z of the pixel
 
 	//choose a shader and enable it
-	shader->enable();
+	//shader->enable();
+	gouraud_shader.enable();
 
 	Matrix44 model_matrix;
 	model_matrix.setIdentity();
 	model_matrix.translate(0,0,0); //example of translation
 	model_matrix.rotate(angle, Vector3(0, 1, 0));
-	shader->setMatrix44("model", model_matrix); //upload the transform matrix to the shader
-	shader->setMatrix44("viewprojection", viewprojection); //upload viewprojection info to the shader
-
+	//shader->setMatrix44("model", model_matrix); //upload the transform matrix to the shader
+	//shader->setMatrix44("viewprojection", viewprojection); //upload viewprojection info to the shader
 	//CODE HERE: pass all the info needed by the shader to do the computations
 	//send the material and light uniforms to the shader
-	//...
+	
+	gouraud_shader->setMatrix44("model", model_matrix);
+	gouraud_shader->setMatrix44("viewprojection", viewprojection);
+	gouraud_shader->setVector3("light_pos", )
 
 	//do the draw call into the GPU
 	mesh->render(GL_TRIANGLES);

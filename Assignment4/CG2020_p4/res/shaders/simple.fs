@@ -8,12 +8,12 @@ varying vec3 v_wNormal;
 void main()
 {
 	//here we set up the normal as a color to see them as a debug
-	vec3 color = v_wNormal;
+	vec3 color = v_wPos;
 
 	//here write the computations for PHONG.
 	//for GOURAUD you dont need to do anything here, just pass the color from the vertex shader
 	//...
 
 	//set the ouput color por the pixel
-	gl_FragColor = vec4( color, 1.0 ) * 1.0;
+	gl_FragColor = vec4( color, 1.0 );
 }
