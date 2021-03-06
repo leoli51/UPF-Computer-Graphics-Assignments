@@ -25,8 +25,13 @@ Vector3 ambient_light(0.1,0.2,0.3); //here we can store the global ambient light
 
 float angle = 0;
 
+<<<<<<< Updated upstream
 // Variables
 float seconds = 0;
+=======
+// application variables
+int app_state = 1;
+>>>>>>> Stashed changes
 
 Application::Application(const char* caption, int width, int height)
 {
@@ -62,7 +67,11 @@ void Application::init(void)
 	shader = Shader::Get( "../res/shaders/simple.vs", "../res/shaders/simple.fs" );
 
 	//load your Gouraud and Phong shaders here and stored them in some global variables
+<<<<<<< Updated upstream
 	gouraud_shader = Shader::Get("../res/shaders/Gouraud.vs", "../res/shaders/Gouraud.fs");
+=======
+	gouraud_shader = Shader::Get("../res/shaders/gouraud.vs", "../res/shaders/gouraud.fs");
+>>>>>>> Stashed changes
 
 	//CODE HERE:
 	//create a light (or several) and and some materials
@@ -88,14 +97,19 @@ void Application::render(void)
 
 	//choose a shader and enable it
 	//shader->enable();
+<<<<<<< Updated upstream
 	gouraud_shader.enable();
 
+=======
+	gouraud_shader->enable();
+>>>>>>> Stashed changes
 	Matrix44 model_matrix;
 	model_matrix.setIdentity();
-	model_matrix.translate(0,0,0); //example of translation
+	model_matrix.translate(0, 0, 0); //example of translation
 	model_matrix.rotate(angle, Vector3(0, 1, 0));
 	//shader->setMatrix44("model", model_matrix); //upload the transform matrix to the shader
 	//shader->setMatrix44("viewprojection", viewprojection); //upload viewprojection info to the shader
+<<<<<<< Updated upstream
 	//CODE HERE: pass all the info needed by the shader to do the computations
 	//send the material and light uniforms to the shader
 	
@@ -103,12 +117,37 @@ void Application::render(void)
 	gouraud_shader->setMatrix44("viewprojection", viewprojection);
 	gouraud_shader->setVector3("light_pos", )
 
+=======
+	gouraud_shader->setMatrix44("model", model_matrix); //upload the transform matrix to the shader
+	gouraud_shader->setMatrix44("viewprojection", viewprojection); //upload viewprojection info to the shader
+
+	//CODE HERE: pass all the info needed by the shader to do the computations
+	//send the material and light uniforms to the shader
+	switch (app_state) {
+	case 1:
+		gouraud_shader->setVector3("light_pos", light->position);
+		gouraud_shader->setVector3("light_dif", light->diffuse_color);
+		gouraud_shader->setVector3("light_spc", light->specular_color);
+		gouraud_shader->setVector3("light_amb", ambient_light);
+
+		gouraud_shader->setVector3("material_dif", material->diffuse);
+		gouraud_shader->setVector3("material_spc", material->specular);
+		gouraud_shader->setVector3("material_amb", material->ambient);
+		gouraud_shader->setFloat("material_shin", material->shininess);
+
+		gouraud_shader->setVector3("eye_pos", camera->eye);
+		break;
+	case 2:
+
+		break;
+	}
+>>>>>>> Stashed changes
 	//do the draw call into the GPU
 	mesh->render(GL_TRIANGLES);
 
 	//disable shader when we do not need it any more
-	shader->disable();
-
+	//shader->disable();
+	gouraud_shader->disable();
 	//swap between front buffer and back buffer
 	SDL_GL_SwapWindow(this->window);
 }
@@ -134,6 +173,10 @@ void Application::onKeyPressed( SDL_KeyboardEvent event )
 {
 	switch(event.keysym.sym)
 	{
+		case SDL_SCANCODE_1: app_state = 1; break;
+		case SDL_SCANCODE_2: app_state = 2; break;
+		case SDL_SCANCODE_3: app_state = 3; break;
+		case SDL_SCANCODE_4: app_state = 4; break;
 		case SDLK_ESCAPE: exit(0); break; //ESC key, kill the app
 		case SDLK_r: 
 			Shader::ReloadAll();
