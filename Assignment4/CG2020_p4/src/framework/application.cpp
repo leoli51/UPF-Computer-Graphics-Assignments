@@ -103,6 +103,9 @@ void Application::render(void)
 	model_matrix.setIdentity();
 	model_matrix.translate(0, 0, 0); //example of translation
 	model_matrix.rotate(angle, Vector3(0, 1, 0));
+
+	gouraud_shader->setMatrix44("model", model_matrix); //upload the transform matrix to the shader
+	gouraud_shader->setMatrix44("viewprojection", viewprojection); //upload viewprojection info to the shader
 	//shader->setMatrix44("model", model_matrix); //upload the transform matrix to the shader
 	//shader->setMatrix44("viewprojection", viewprojection); //upload viewprojection info to the shader
 
@@ -111,26 +114,25 @@ void Application::render(void)
 	
 	light = new(Light);
 	material = new(Material);
+	gouraud_shader->setVector3("light_pos", light->position);
+	gouraud_shader->setVector3("light_dif", light->diffuse_color);
+	gouraud_shader->setVector3("light_spc", light->specular_color);
+	gouraud_shader->setVector3("light_amb", ambient_light);
 
+	gouraud_shader->setVector3("material_dif", material->diffuse);
+	gouraud_shader->setVector3("material_spc", material->specular);
+	gouraud_shader->setVector3("material_amb", material->ambient);
+	gouraud_shader->setFloat("material_shin", material->shininess);
+
+	gouraud_shader->setVector3("eye_pos", camera->eye);
 
 	//CODE HERE: pass all the info needed by the shader to do the computations
 	//send the material and light uniforms to the shader
 	switch (app_state) {
 	case 1:
-		gouraud_shader->setMatrix44("model", model_matrix); //upload the transform matrix to the shader
-		gouraud_shader->setMatrix44("viewprojection", viewprojection); //upload viewprojection info to the shader
 
-		gouraud_shader->setVector3("light_pos", light->position);
-		gouraud_shader->setVector3("light_dif", light->diffuse_color);
-		gouraud_shader->setVector3("light_spc", light->specular_color);
-		gouraud_shader->setVector3("light_amb", ambient_light);
 
-		gouraud_shader->setVector3("material_dif", material->diffuse);
-		gouraud_shader->setVector3("material_spc", material->specular);
-		gouraud_shader->setVector3("material_amb", material->ambient);
-		gouraud_shader->setFloat("material_shin", material->shininess);
 
-		gouraud_shader->setVector3("eye_pos", camera->eye);
 		break;
 	case 2:
 
