@@ -32,18 +32,16 @@ void main()
 	//calculate vector
 	vec3 L = normalize(light_pos - wPos);
 	vec3 N = normalize(wNormal);
-	vec3 R = reflect(L, N);
+	vec3 R = normalize(reflect(-L, N));
 	vec3 V =  normalize(eye_pos - wPos);
-	float LdotN = dot(L, N);
-	LdotN = clamp(1, 0, 1);
-	float RdotV = dot(R, V);
-	//RdotV = clamp(1, 0, 1);
+	float LdotN = max(0.0, dot(L, N));
+	float RdotV = max(0.0, dot(R, V));
 	RdotV = pow(RdotV, material_shin);
 
 	//in GOURAUD compute the color here and pass it to the pixel shader
 	vec3 amb = light_amb * material_amb;
-	vec3 dif = light_dif * LdotN * material_dif;
-	vec3 spc = light_spc * RdotV * material_spc;
+	vec3 dif = light_dif * material_dif * LdotN;
+	vec3 spc = light_spc * material_spc * RdotV;
 
 	//compute color
 	color = amb + dif + spc;

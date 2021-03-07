@@ -30,7 +30,7 @@ float angle = 0;
 float seconds = 0;
 
 // application variables
-int app_state = 2;
+int app_state = 1;
 
 
 Application::Application(const char* caption, int width, int height)
@@ -67,7 +67,7 @@ void Application::init(void)
 	//shader = Shader::Get( "../res/shaders/simple.vs", "../res/shaders/simple.fs" );
 
 	//load your Gouraud and Phong shaders here and stored them in some global variables
-	//gouraud_shader = Shader::Get("../res/shaders/gouraud.vs", "../res/shaders/gouraud.fs");
+	gouraud_shader = Shader::Get("../res/shaders/gouraud.vs", "../res/shaders/gouraud.fs");
 	phong_shader = Shader::Get("../res/shaders/phong.vs", "../res/shaders/phong.fs");
 
 	//CODE HERE:
@@ -155,10 +155,10 @@ void Application::onKeyPressed( SDL_KeyboardEvent event )
 {
 	switch(event.keysym.sym)
 	{
-		case SDL_SCANCODE_1: app_state = 1; break;
-		case SDL_SCANCODE_2: app_state = 2; break;
-		case SDL_SCANCODE_3: app_state = 3; break;
-		case SDL_SCANCODE_4: app_state = 4; break;
+		case SDLK_1: app_state = 1; std::cout<<"Switched shader to gouraud shader\n"<<std::endl; break;
+		case SDLK_2: app_state = 2; std::cout<<"Switched shader to phong shader\n"<<std::endl; break;
+		case SDLK_3: app_state = 3; break;
+		case SDLK_4: app_state = 4; break;
 		case SDLK_ESCAPE: exit(0); break; //ESC key, kill the app
 		case SDLK_r: 
 			Shader::ReloadAll();
