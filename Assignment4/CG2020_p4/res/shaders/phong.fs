@@ -30,13 +30,10 @@ void main()
     float dst_squared = distance(eye_pos, v_wPos) + distance(v_wPos, light_pos);
     dst_squared = dst_squared * dst_squared;
 
-	//vec3 amb = light_amb * material_amb;
-	//vec3 dif = light_dif / dst_squared  * LdotN * material_dif;
-	//vec3 spc = light_spc / dst_squared * RdotV * material_spc;
+	vec3 amb = light_amb * material_amb;
+	vec3 dif = light_dif / dst_squared  * LdotN * material_dif;
+	vec3 spc = light_spc / dst_squared * RdotV * material_spc;
 
-    vec3 amb = light_amb * material_amb;    
-	vec3 dif = light_dif * material_dif * LdotN;
-	vec3 spc = light_spc * material_spc * RdotV;
 	//compute color
 	vec3 color = amb + dif + spc;
 

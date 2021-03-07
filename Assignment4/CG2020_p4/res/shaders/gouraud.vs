@@ -38,10 +38,12 @@ void main()
 	float RdotV = max(0.0, dot(R, V));
 	RdotV = pow(RdotV, material_shin);
 
-	//in GOURAUD compute the color here and pass it to the pixel shader
+	float dst_squared = distance(eye_pos, v_wPos) + distance(v_wPos, light_pos);
+    dst_squared = dst_squared * dst_squared;
+
 	vec3 amb = light_amb * material_amb;
-	vec3 dif = light_dif * material_dif * LdotN;
-	vec3 spc = light_spc * material_spc * RdotV;
+	vec3 dif = light_dif / dst_squared  * LdotN * material_dif;
+	vec3 spc = light_spc / dst_squared * RdotV * material_spc;
 
 	//compute color
 	color = amb + dif + spc;

@@ -73,6 +73,9 @@ void Application::init(void)
 	//CODE HERE:
 	//create a light (or several) and and some materials
 	light = new Light();
+	light->position.set(0, 15, 25);
+	light->diffuse_color.set(1000,1000,1000);
+	light->specular_color.set(1000,1000,1000);
 	material = new Material();
 }
 
