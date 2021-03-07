@@ -25,13 +25,13 @@ Vector3 ambient_light(0.1,0.2,0.3); //here we can store the global ambient light
 
 float angle = 0;
 
-<<<<<<< Updated upstream
+
 // Variables
 float seconds = 0;
-=======
+
 // application variables
 int app_state = 1;
->>>>>>> Stashed changes
+
 
 Application::Application(const char* caption, int width, int height)
 {
@@ -67,11 +67,9 @@ void Application::init(void)
 	shader = Shader::Get( "../res/shaders/simple.vs", "../res/shaders/simple.fs" );
 
 	//load your Gouraud and Phong shaders here and stored them in some global variables
-<<<<<<< Updated upstream
-	gouraud_shader = Shader::Get("../res/shaders/Gouraud.vs", "../res/shaders/Gouraud.fs");
-=======
+
 	gouraud_shader = Shader::Get("../res/shaders/gouraud.vs", "../res/shaders/gouraud.fs");
->>>>>>> Stashed changes
+
 
 	//CODE HERE:
 	//create a light (or several) and and some materials
@@ -97,27 +95,20 @@ void Application::render(void)
 
 	//choose a shader and enable it
 	//shader->enable();
-<<<<<<< Updated upstream
-	gouraud_shader.enable();
 
-=======
 	gouraud_shader->enable();
->>>>>>> Stashed changes
+
 	Matrix44 model_matrix;
 	model_matrix.setIdentity();
 	model_matrix.translate(0, 0, 0); //example of translation
 	model_matrix.rotate(angle, Vector3(0, 1, 0));
 	//shader->setMatrix44("model", model_matrix); //upload the transform matrix to the shader
 	//shader->setMatrix44("viewprojection", viewprojection); //upload viewprojection info to the shader
-<<<<<<< Updated upstream
+
 	//CODE HERE: pass all the info needed by the shader to do the computations
 	//send the material and light uniforms to the shader
 	
-	gouraud_shader->setMatrix44("model", model_matrix);
-	gouraud_shader->setMatrix44("viewprojection", viewprojection);
-	gouraud_shader->setVector3("light_pos", )
 
-=======
 	gouraud_shader->setMatrix44("model", model_matrix); //upload the transform matrix to the shader
 	gouraud_shader->setMatrix44("viewprojection", viewprojection); //upload viewprojection info to the shader
 
@@ -141,7 +132,7 @@ void Application::render(void)
 
 		break;
 	}
->>>>>>> Stashed changes
+
 	//do the draw call into the GPU
 	mesh->render(GL_TRIANGLES);
 
