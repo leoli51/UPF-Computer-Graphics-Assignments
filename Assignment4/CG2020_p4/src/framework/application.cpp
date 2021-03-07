@@ -21,6 +21,7 @@ Light* light = NULL;
 Shader* phong_shader = NULL;
 Shader* gouraud_shader = NULL;
 
+
 Vector3 ambient_light(0.1,0.2,0.3); //here we can store the global ambient light of the scene
 
 float angle = 0;
@@ -108,14 +109,17 @@ void Application::render(void)
 	//CODE HERE: pass all the info needed by the shader to do the computations
 	//send the material and light uniforms to the shader
 	
+	light = new(Light);
+	material = new(Material);
 
-	gouraud_shader->setMatrix44("model", model_matrix); //upload the transform matrix to the shader
-	gouraud_shader->setMatrix44("viewprojection", viewprojection); //upload viewprojection info to the shader
 
 	//CODE HERE: pass all the info needed by the shader to do the computations
 	//send the material and light uniforms to the shader
 	switch (app_state) {
 	case 1:
+		gouraud_shader->setMatrix44("model", model_matrix); //upload the transform matrix to the shader
+		gouraud_shader->setMatrix44("viewprojection", viewprojection); //upload viewprojection info to the shader
+
 		gouraud_shader->setVector3("light_pos", light->position);
 		gouraud_shader->setVector3("light_dif", light->diffuse_color);
 		gouraud_shader->setVector3("light_spc", light->specular_color);
