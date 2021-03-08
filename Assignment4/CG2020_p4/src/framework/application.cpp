@@ -34,12 +34,16 @@ float angle = 0;
 float seconds = 0;
 
 // application variables
-int app_state = 1;
+int selected_shader = 1;
 bool multi_light = false;
+int mesh_num = 1;
+float mesh_offset = 20.0f;
 
 // useful function declaration
 void passLightInfoToShader(Light* light, Shader* shader);
 void passMaterialInfoToShader(Material* light, Shader* shader);
+
+
 
 Application::Application(const char* caption, int width, int height)
 {
@@ -128,18 +132,15 @@ void Application::render(void)
 	model_matrix.rotate(angle, Vector3(0, 1, 0));
 
 	// choose shader
-	switch (app_state) {
+	switch (selected_shader) {
 		case 1: shader = gouraud_shader; break;
 		case 2: shader = phong_shader; break;
 	}
-
-	// multipass or single pass
 	
 	// enable shader 
 	shader->enable();
 
 	// pass values to shader
-	shader->setMatrix44("model", model_matrix); //upload the transform matrix to the shader
 	shader->setMatrix44("viewprojection", viewprojection); //upload viewprojection info to the shader
 	shader->setVector3("light_amb", ambient_light);
 	shader->setVector3("eye_pos", camera->eye);
@@ -149,7 +150,11 @@ void Application::render(void)
 
 	// draw with the first light 
 	glDisable(GL_BLEND);
-	mesh->render(GL_TRIANGLES);
+	for (int mesh_index = 0; mesh_index < mesh_num; mesh_index++){
+		model_matrix.setTranslation(mesh_index * mesh_offset, 0, 0);
+		shader->setMatrix44("model", model_matrix); //upload the transform matrix to the shader
+		mesh->render(GL_TRIANGLES);
+	}
 
 	// if multiuple lights draw 
 	if (multi_light){
@@ -157,13 +162,17 @@ void Application::render(void)
         glBlendFunc( GL_ONE, GL_ONE );
 		for (int i = 1; i < lights->size(); i++){
 			passLightInfoToShader(lights->at(i), shader);
-			mesh->render(GL_TRIANGLES);
+			for (int mesh_index = 0; mesh_index < mesh_num; mesh_index++){
+				model_matrix.setTranslation(mesh_index * mesh_offset, 0, 0);
+				shader->setMatrix44("model", model_matrix); //upload the transform matrix to the shader
+				mesh->render(GL_TRIANGLES);
+			}
 		}
 	}
 	//disable shader when we do not need it any more
 	shader->disable();
 
-	//swap between front buffer and back buffer
+		//swap between front buffer and back buffer
 	SDL_GL_SwapWindow(this->window);
 }
 
@@ -188,15 +197,20 @@ void Application::onKeyPressed( SDL_KeyboardEvent event )
 {
 	switch(event.keysym.sym)
 	{
-		case SDLK_1: app_state = 1; std::cout<<"Switched shader to gouraud shader\n"<<std::endl; break;
-		case SDLK_2: app_state = 2; std::cout<<"Switched shader to phong shader\n"<<std::endl; break;
-		case SDLK_3: app_state = 3; multi_light = !multi_light; break;
-		case SDLK_4: app_state = 4; break;
+		case SDLK_1: selected_shader = 1; std::cout<<"Switched shader to gouraud shader\n"<<std::endl; break;
+		case SDLK_2: selected_shader = 2; std::cout<<"Switched shader to phong shader\n"<<std::endl; break;
+		case SDLK_3: selected_shader = 3; multi_light = !multi_light; break;
+		case SDLK_4: selected_shader = 4; break;
+		case SDLK_PLUS: mesh_num++; break;
+		case SDLK_MINUS: mesh_num--; break;
 		case SDLK_ESCAPE: exit(0); break; //ESC key, kill the app
 		case SDLK_r: 
 			Shader::ReloadAll();
 			break; //ESC key, kill the app
 	}
+
+	if (mesh_num < 1) mesh_num = 1;
+	else if (mesh_num > 30) mesh_num = 30;
 }
 
 //mouse button event
