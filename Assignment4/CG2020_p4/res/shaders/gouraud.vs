@@ -38,7 +38,7 @@ void main()
 	float RdotV = max(0.0, dot(R, V));
 	RdotV = pow(RdotV, material_shin);
 
-	float dst_squared = distance(eye_pos, v_wPos) + distance(v_wPos, light_pos);
+	float dst_squared = /*distance(eye_pos, v_wPos) +*/ distance(v_wPos, light_pos);
     dst_squared = dst_squared * dst_squared;
 
 	vec3 amb = light_amb * material_amb;

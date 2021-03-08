@@ -11,6 +11,7 @@
 #include "material.h"
 #include "light.h"
 
+
 Camera* camera = NULL;
 Mesh* mesh = NULL;
 Shader* shader = NULL;
@@ -18,11 +19,14 @@ Shader* shader = NULL;
 //might be useful...
 Material* material = NULL;
 Light* light = NULL;
+Light* light2 = NULL;
+Light* light3 = NULL;
+std::vector<Light*>* lights = NULL; 
 Shader* phong_shader = NULL;
 Shader* gouraud_shader = NULL;
 
 
-Vector3 ambient_light(0.1,0.2,0.3); //here we can store the global ambient light of the scene
+Vector3 ambient_light(0.1,0.1,0.1); //here we can store the global ambient light of the scene
 
 float angle = 0;
 
@@ -31,7 +35,11 @@ float seconds = 0;
 
 // application variables
 int app_state = 1;
+bool multi_light = false;
 
+// useful function declaration
+void passLightInfoToShader(Light* light, Shader* shader);
+void passMaterialInfoToShader(Material* light, Shader* shader);
 
 Application::Application(const char* caption, int width, int height)
 {
@@ -74,9 +82,26 @@ void Application::init(void)
 	//create a light (or several) and and some materials
 	light = new Light();
 	light->position.set(0, 15, 25);
-	light->diffuse_color.set(1000,1000,1000);
-	light->specular_color.set(1000,1000,1000);
+	light->diffuse_color.set(200,200,200);
+	light->specular_color.set(200,200, 200);
+
+	light2 = new Light();
+	light2->position.set(-15, 15, 10);
+	light2->diffuse_color.set(100, 0, 0);
+	light2->specular_color.set(100, 0, 0);
+
+	light3 = new Light();
+	light3->position.set(15, 15, 10);
+	light3->diffuse_color.set(0,0,100);
+	light3->diffuse_color.set(0,0,100);
+
+	lights = new std::vector<Light*>();
+	lights->push_back(light);
+	lights->push_back(light2);
+	lights->push_back(light3);
+
 	material = new Material();
+	material->shininess = 5;
 }
 
 //render one frame
@@ -107,6 +132,8 @@ void Application::render(void)
 		case 1: shader = gouraud_shader; break;
 		case 2: shader = phong_shader; break;
 	}
+
+	// multipass or single pass
 	
 	// enable shader 
 	shader->enable();
@@ -114,22 +141,25 @@ void Application::render(void)
 	// pass values to shader
 	shader->setMatrix44("model", model_matrix); //upload the transform matrix to the shader
 	shader->setMatrix44("viewprojection", viewprojection); //upload viewprojection info to the shader
-
-	shader->setVector3("light_pos", light->position);
-	shader->setVector3("light_dif", light->diffuse_color);
-	shader->setVector3("light_spc", light->specular_color);
 	shader->setVector3("light_amb", ambient_light);
-
-	shader->setVector3("material_dif", material->diffuse);
-	shader->setVector3("material_spc", material->specular);
-	shader->setVector3("material_amb", material->ambient);
-	shader->setFloat("material_shin", material->shininess);
-
 	shader->setVector3("eye_pos", camera->eye);
+	if (lights->size() > 0)
+		passLightInfoToShader(lights->at(0), shader);
+	passMaterialInfoToShader(material, shader);
 
-	//do the draw call into the GPU
+	// draw with the first light 
+	glDisable(GL_BLEND);
 	mesh->render(GL_TRIANGLES);
 
+	// if multiuple lights draw 
+	if (multi_light){
+		glEnable( GL_BLEND );
+        glBlendFunc( GL_ONE, GL_ONE );
+		for (int i = 1; i < lights->size(); i++){
+			passLightInfoToShader(lights->at(i), shader);
+			mesh->render(GL_TRIANGLES);
+		}
+	}
 	//disable shader when we do not need it any more
 	shader->disable();
 
@@ -160,7 +190,7 @@ void Application::onKeyPressed( SDL_KeyboardEvent event )
 	{
 		case SDLK_1: app_state = 1; std::cout<<"Switched shader to gouraud shader\n"<<std::endl; break;
 		case SDLK_2: app_state = 2; std::cout<<"Switched shader to phong shader\n"<<std::endl; break;
-		case SDLK_3: app_state = 3; break;
+		case SDLK_3: app_state = 3; multi_light = !multi_light; break;
 		case SDLK_4: app_state = 4; break;
 		case SDLK_ESCAPE: exit(0); break; //ESC key, kill the app
 		case SDLK_r: 
@@ -191,4 +221,19 @@ void Application::start()
 {
 	std::cout << "launching loop..." << std::endl;
 	launchLoop(this);
+}
+
+// helper function
+
+void passLightInfoToShader(Light* light, Shader* shader){
+	shader->setVector3("light_pos", light->position);
+	shader->setVector3("light_dif", light->diffuse_color);
+	shader->setVector3("light_spc", light->specular_color);
+}
+
+void passMaterialInfoToShader(Material* material, Shader* shader){
+	shader->setVector3("material_dif", material->diffuse);
+	shader->setVector3("material_spc", material->specular);
+	shader->setVector3("material_amb", material->ambient);
+	shader->setFloat("material_shin", material->shininess);
 }
