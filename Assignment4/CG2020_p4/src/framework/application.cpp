@@ -14,14 +14,20 @@
 
 Camera* camera = NULL;
 Mesh* mesh = NULL;
+Mesh* light_mesh = NULL;
 Shader* shader = NULL;
 
 //might be useful...
 Material* material = NULL;
 Light* light = NULL;
-Light* light2 = NULL;
-Light* light3 = NULL;
 std::vector<Light*>* lights = NULL; 
+int controlled_light_index = 0;
+float light_speed = 20;
+const float z_light_pos = 10;
+const float light_intensity = 100;
+float camera_speed = 20;
+
+Shader* light_sphere_shader = NULL;
 Shader* phong_shader = NULL;
 Shader* gouraud_shader = NULL;
 
@@ -35,7 +41,6 @@ float seconds = 0;
 
 // application variables
 int selected_shader = 1;
-bool multi_light = false;
 int mesh_num = 1;
 float mesh_offset = 20.0f;
 
@@ -74,35 +79,24 @@ void Application::init(void)
 	mesh = new Mesh();
 	if( !mesh->loadOBJ( "../res/meshes/lee.obj" ) )
 		std::cout << "FILE Lee.obj NOT FOUND " << std::endl;
+	
+	light_mesh = new Mesh();
+	if (!light_mesh->loadOBJ("../res/meshes/sphere.obj"))
+		std::cout<<"FILE sphere.obj NOT FOUND"<<std::endl;
 
-	//we load one or several shaders...
-	//shader = Shader::Get( "../res/shaders/simple.vs", "../res/shaders/simple.fs" );
-
-	//load your Gouraud and Phong shaders here and stored them in some global variables
+	light_sphere_shader = Shader::Get("../res/shaders/simple.vs", "../res/shaders/simple.fs");
 	gouraud_shader = Shader::Get("../res/shaders/gouraud.vs", "../res/shaders/gouraud.fs");
 	phong_shader = Shader::Get("../res/shaders/phong.vs", "../res/shaders/phong.fs");
 
 	//CODE HERE:
 	//create a light (or several) and and some materials
 	light = new Light();
-	light->position.set(0, 15, 25);
-	light->diffuse_color.set(200,200,200);
-	light->specular_color.set(200,200, 200);
-
-	light2 = new Light();
-	light2->position.set(-15, 15, 10);
-	light2->diffuse_color.set(100, 0, 0);
-	light2->specular_color.set(100, 0, 0);
-
-	light3 = new Light();
-	light3->position.set(15, 15, 10);
-	light3->diffuse_color.set(0,0,100);
-	light3->diffuse_color.set(0,0,100);
+	light->position.set(0, 15, z_light_pos);
+	light->diffuse_color.random(light_intensity);
+	light->specular_color = light->diffuse_color;
 
 	lights = new std::vector<Light*>();
 	lights->push_back(light);
-	lights->push_back(light2);
-	lights->push_back(light3);
 
 	material = new Material();
 	material->shininess = 5;
@@ -125,7 +119,22 @@ void Application::render(void)
 	glEnable( GL_DEPTH_TEST ); //enable depth testing for occlusions
 	glDepthFunc(GL_LEQUAL); //Z will pass if the Z is LESS or EQUAL to the Z of the pixel
 
-	
+	// render light ball
+	Matrix44 light_model_matrix;
+	light_sphere_shader->enable();
+
+	for (Light *l : *lights){
+		light_model_matrix.setIdentity();
+		light_model_matrix.translate(l->position.x, l->position.y, l->position.z); //example of translation
+		light_sphere_shader->setMatrix44("viewprojection", viewprojection); //upload viewprojection info to the shader
+		light_sphere_shader->setMatrix44("model", light_model_matrix);
+		light_sphere_shader->setVector3("light_color", l->diffuse_color);
+		light_mesh->render(GL_TRIANGLES);
+	}
+
+	light_sphere_shader->disable();
+
+	// proceed to render mesh
 	Matrix44 model_matrix;
 	model_matrix.setIdentity();
 	model_matrix.translate(0, 0, 0); //example of translation
@@ -136,7 +145,7 @@ void Application::render(void)
 		case 1: shader = gouraud_shader; break;
 		case 2: shader = phong_shader; break;
 	}
-	
+
 	// enable shader 
 	shader->enable();
 
@@ -157,7 +166,7 @@ void Application::render(void)
 	}
 
 	// if multiuple lights draw 
-	if (multi_light){
+	if (lights->size() > 1){
 		glEnable( GL_BLEND );
         glBlendFunc( GL_ONE, GL_ONE );
 		for (int i = 1; i < lights->size(); i++){
@@ -183,13 +192,23 @@ void Application::update(double seconds_elapsed)
 		angle += seconds_elapsed;
 
 	if (keystate[SDL_SCANCODE_RIGHT])
-		camera->eye = camera->eye + Vector3(1, 0, 0) * seconds_elapsed * 10.0;
+		camera->eye = camera->eye + Vector3(1, 0, 0) * seconds_elapsed * camera_speed;
 	else if (keystate[SDL_SCANCODE_LEFT])
-		camera->eye = camera->eye + Vector3(-1, 0, 0) * seconds_elapsed * 10.0;
+		camera->eye = camera->eye + Vector3(-1, 0, 0) * seconds_elapsed * camera_speed;
 	if (keystate[SDL_SCANCODE_UP])
-		camera->eye = camera->eye + Vector3(0, 1, 0) * seconds_elapsed * 10.0;
+		camera->eye = camera->eye + Vector3(0, 1, 0) * seconds_elapsed * camera_speed;
 	else if (keystate[SDL_SCANCODE_DOWN])
-		camera->eye = camera->eye + Vector3(0, -1, 0) * seconds_elapsed * 10.0;
+		camera->eye = camera->eye + Vector3(0, -1, 0) * seconds_elapsed * camera_speed;
+
+	// light controls
+	if (keystate[SDL_SCANCODE_W])
+		lights->at(controlled_light_index)->position.y += seconds_elapsed * light_speed;
+	else if (keystate[SDL_SCANCODE_S])
+		lights->at(controlled_light_index)->position.y -= seconds_elapsed * light_speed;
+	if (keystate[SDL_SCANCODE_D])
+		lights->at(controlled_light_index)->position.x += seconds_elapsed * light_speed;
+	else if (keystate[SDL_SCANCODE_A])
+		lights->at(controlled_light_index)->position.x -= seconds_elapsed * light_speed;
 }
 
 //keyboard press event 
@@ -199,10 +218,25 @@ void Application::onKeyPressed( SDL_KeyboardEvent event )
 	{
 		case SDLK_1: selected_shader = 1; std::cout<<"Switched shader to gouraud shader\n"<<std::endl; break;
 		case SDLK_2: selected_shader = 2; std::cout<<"Switched shader to phong shader\n"<<std::endl; break;
-		case SDLK_3: selected_shader = 3; multi_light = !multi_light; break;
-		case SDLK_4: selected_shader = 4; break;
 		case SDLK_PLUS: mesh_num++; break;
 		case SDLK_MINUS: mesh_num--; break;
+		case SDLK_x:{ // delete a light
+			if (lights->size() <= 1) break;
+			Light* tmp = lights->at(controlled_light_index);
+			lights->erase(lights->begin() + controlled_light_index);
+			delete tmp;
+			break;
+		}
+		case SDLK_z: controlled_light_index++; break;
+		case SDLK_c: { // create a new light
+			Light* tmp = new Light();
+			tmp->position.set(0,0,z_light_pos);
+			tmp->diffuse_color.random(light_intensity);
+			tmp->specular_color = tmp->diffuse_color;
+			controlled_light_index = lights->size();
+			lights->push_back(tmp);
+			break;
+		}
 		case SDLK_ESCAPE: exit(0); break; //ESC key, kill the app
 		case SDLK_r: 
 			Shader::ReloadAll();
@@ -211,6 +245,8 @@ void Application::onKeyPressed( SDL_KeyboardEvent event )
 
 	if (mesh_num < 1) mesh_num = 1;
 	else if (mesh_num > 30) mesh_num = 30;
+
+	controlled_light_index %= lights->size();
 }
 
 //mouse button event

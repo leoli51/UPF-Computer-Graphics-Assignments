@@ -173,7 +173,7 @@ bool Mesh::loadOBJ(const char* filename)
 				v2 = parseVector3( tokens[iPoly].c_str(), '/' );
 				v3 = parseVector3( tokens[iPoly+1].c_str(), '/' );
 
-				vertices.push_back( indexed_positions[(unsigned int)(v1.x) -1 ] );
+				vertices.push_back( indexed_positions[(unsigned int)(v1.x) -1] );
 				vertices.push_back( indexed_positions[(unsigned int)(v2.x) -1] );
 				vertices.push_back( indexed_positions[(unsigned int)(v3.x) -1] );
 				//triangles.push_back( VECTOR_INDICES_TYPE(vertex_i, vertex_i+1, vertex_i+2) ); //not needed
