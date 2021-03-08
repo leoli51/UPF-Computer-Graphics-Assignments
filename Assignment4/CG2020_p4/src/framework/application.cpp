@@ -32,6 +32,9 @@ float seconds = 0;
 // application variables
 int app_state = 1;
 
+// task4
+bool task4_bool = false;
+
 
 Application::Application(const char* caption, int width, int height)
 {
@@ -104,15 +107,25 @@ void Application::render(void)
 
 	// choose shader
 	switch (app_state) {
-		case 1: shader = gouraud_shader; break;
-		case 2: shader = phong_shader; break;
+		case 1: 
+			shader = gouraud_shader; 
+			task4_bool = false;
+			break;
+		case 2: 
+			shader = phong_shader; 
+			task4_bool = false;
+			break;
+		case 3: 
+			shader = phong_shader;
+			task4_bool = true;	
+			break;
 	}
 	
 	// enable shader 
 	shader->enable();
 
 	// pass values to shader
-	shader->setMatrix44("model", model_matrix); //upload the transform matrix to the shader
+	
 	shader->setMatrix44("viewprojection", viewprojection); //upload viewprojection info to the shader
 
 	shader->setVector3("light_pos", light->position);
@@ -127,14 +140,32 @@ void Application::render(void)
 
 	shader->setVector3("eye_pos", camera->eye);
 
-	//do the draw call into the GPU
-	mesh->render(GL_TRIANGLES);
+	if (task4_bool == true)
+	{
+		for (int i = 0; i <= 30; i += 10)
+		{
+			model_matrix.setTranslation(i, 0, 0);
+			shader->setMatrix44("model", model_matrix); //upload the transform matrix to the shader
+			mesh->render(GL_TRIANGLES);
+		}
+		//disable shader when we do not need it any more
+		shader->disable();
 
-	//disable shader when we do not need it any more
-	shader->disable();
+		//swap between front buffer and back buffer
+		SDL_GL_SwapWindow(this->window);
+	}
+	else
+	{
+		shader->setMatrix44("model", model_matrix); //upload the transform matrix to the shader
+		//do the draw call into the GPU
+		mesh->render(GL_TRIANGLES);
 
-	//swap between front buffer and back buffer
-	SDL_GL_SwapWindow(this->window);
+		//disable shader when we do not need it any more
+		shader->disable();
+
+		//swap between front buffer and back buffer
+		SDL_GL_SwapWindow(this->window);
+	}
 }
 
 //called after render
