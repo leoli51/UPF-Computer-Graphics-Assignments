@@ -420,7 +420,7 @@ void Image::fillActiveEdgesTable(int x0, int y0, int x1, int y1, int min_y, int 
 }
 
 
-void Image::fillTriangleWithColor(Vector3 p0, Vector3 p1, Vector3 p2, const Color& color0, const Color& color1, const Color& color2, FloatImage& zbuffer) {
+void Image::fillTriangleWithColor(Vector3 p0, Vector3 p1, Vector3 p2, Color& color0, Color& color1, Color& color2, FloatImage& zbuffer) {
 	int min_y = (std::min)((std::min)(p0.y, p1.y), p2.y);
 	int max_y = (std::max)((std::max)(p0.y, p1.y), p2.y);
 

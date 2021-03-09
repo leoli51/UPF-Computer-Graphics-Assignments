@@ -84,7 +84,7 @@ public:
 	void drawLineFastBresenham(int x0, int y0, int x1, int y1, const Color& color);
 	void drawLineDDA(int x1, int y1, int x2, int y2, const Color& color);
 	void fillActiveEdgesTable(int x0, int y0, int x1, int y1, int min_y, int max_y, std::vector<Cells>& table);
-	void fillTriangleWithColor(Vector3 p0, Vector3 p1, Vector3 p2, const Color& c0, const Color& c1, const Color& c2, FloatImage& zbuffer);
+	void fillTriangleWithColor(Vector3 p0, Vector3 p1, Vector3 p2, Color& c0, Color& c1, Color& c2, FloatImage& zbuffer);
 	void fillTriangleWithTexture(Vector3 p0, Vector3 p1, Vector3 p2, Vector2 uv0, Vector2 uv1, Vector2 uv2, const Image& texture, FloatImage& zbuffer);
 
 	//used to easy code
