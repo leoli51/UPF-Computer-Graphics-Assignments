@@ -246,7 +246,7 @@ void Application::onKeyPressed( SDL_KeyboardEvent event )
 		case SDLK_z: controlled_light_index++; break;
 		case SDLK_c: { // create a new light
 			Light* tmp = new Light();
-			tmp->position.set(0,0,z_light_pos);
+			tmp->position.set(0,15,z_light_pos);
 			tmp->diffuse_color.random(light_intensity);
 			tmp->specular_color = tmp->diffuse_color;
 			controlled_light_index = lights->size();
