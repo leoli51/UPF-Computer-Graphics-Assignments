@@ -35,6 +35,7 @@ Shader* gouraud_shader = NULL;
 Vector3 ambient_light(0.1,0.1,0.1); //here we can store the global ambient light of the scene
 
 float angle = 0;
+float orbit_angle = 0;
 
 // Variables
 float seconds = 0;
@@ -110,7 +111,7 @@ void Application::render(void)
 	camera->updateProjectionMatrix();
 	//Get the viewprojection matrix from our camera
 	Matrix44 viewprojection = camera->getViewProjectionMatrix();
-
+	
 	//set the clear color of the colorbuffer as the ambient light so it matches
 	glClearColor(ambient_light.x, ambient_light.y, ambient_light.z, 1.0);
 
@@ -160,7 +161,7 @@ void Application::render(void)
 	// draw with the first light 
 	glDisable(GL_BLEND);
 	for (int mesh_index = 0; mesh_index < mesh_num; mesh_index++){
-		model_matrix.setTranslation(mesh_index * mesh_offset, 0, 0);
+		model_matrix.m[12] = mesh_index * mesh_offset;
 		shader->setMatrix44("model", model_matrix); //upload the transform matrix to the shader
 		mesh->render(GL_TRIANGLES);
 	}
@@ -172,7 +173,8 @@ void Application::render(void)
 		for (int i = 1; i < lights->size(); i++){
 			passLightInfoToShader(lights->at(i), shader);
 			for (int mesh_index = 0; mesh_index < mesh_num; mesh_index++){
-				model_matrix.setTranslation(mesh_index * mesh_offset, 0, 0);
+				model_matrix.m[12] = mesh_index * mesh_offset;
+				//model_matrix.setTranslation(mesh_index * mesh_offset, 0, 0);
 				shader->setMatrix44("model", model_matrix); //upload the transform matrix to the shader
 				mesh->render(GL_TRIANGLES);
 			}
@@ -181,7 +183,7 @@ void Application::render(void)
 	//disable shader when we do not need it any more
 	shader->disable();
 
-		//swap between front buffer and back buffer
+	//swap between front buffer and back buffer
 	SDL_GL_SwapWindow(this->window);
 }
 
@@ -209,6 +211,20 @@ void Application::update(double seconds_elapsed)
 		lights->at(controlled_light_index)->position.x += seconds_elapsed * light_speed;
 	else if (keystate[SDL_SCANCODE_A])
 		lights->at(controlled_light_index)->position.x -= seconds_elapsed * light_speed;
+	if (keystate[SDL_SCANCODE_F])
+		lights->at(controlled_light_index)->position.z += seconds_elapsed * light_speed;
+	else if (keystate[SDL_SCANCODE_G])
+		lights->at(controlled_light_index)->position.z -= seconds_elapsed * light_speed;
+
+	// orbit
+	if (keystate[SDL_SCANCODE_J])
+		camera->orbit(orbit_angle + seconds_elapsed, Vector3(0, 1, 0));
+	else if (keystate[SDL_SCANCODE_L])
+		camera->orbit(orbit_angle - seconds_elapsed, Vector3(0, 1, 0));
+	if (keystate[SDL_SCANCODE_I])
+		camera->orbit(orbit_angle + seconds_elapsed, Vector3(1, 0, 0));
+	else if (keystate[SDL_SCANCODE_K])
+		camera->orbit(orbit_angle - seconds_elapsed, Vector3(1, 0, 0));
 }
 
 //keyboard press event 

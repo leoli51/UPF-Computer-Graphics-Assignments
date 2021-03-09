@@ -50,6 +50,16 @@ void Camera::rotate(float angle, const Vector3& axis)
 
 }
 
+void Camera::orbit(float angle, const Vector3& axis)
+{
+	Matrix44 R;
+	R.setRotation(angle, axis);
+	Vector3 new_front = R * (eye - center);
+	eye = center + new_front;
+	updateViewMatrix();
+
+}
+
 void Camera::setOrthographic(float left, float right, float top, float bottom, float near_plane, float far_plane)
 {
 	type = ORTHOGRAPHIC;
