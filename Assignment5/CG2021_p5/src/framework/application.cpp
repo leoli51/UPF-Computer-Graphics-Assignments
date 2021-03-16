@@ -5,12 +5,22 @@
 #include "mesh.h"
 #include "shader.h"
 #include "texture.h"
+#include "light.h"
+#include "material.h"
+
+void passLightInfoToShader(Light* light, Shader* shader);
+void passMaterialInfoToShader(Material* light, Shader* shader);
 
 Camera* camera = NULL;
 Mesh* mesh = NULL;
 Matrix44 model_matrix;
 Shader* shader = NULL;
 Texture* texture = NULL;
+
+Light* light = NULL;
+Material* material = NULL;
+
+const Vector3 ambient_light = Vector3(0.1,0.1,0.1);
 
 Application::Application(const char* caption, int width, int height)
 {
@@ -41,6 +51,14 @@ void Application::init(void)
 	mesh = new Mesh();
 	mesh->loadOBJ("../res/meshes/lee.obj");
 
+	light = new Light();
+	light->position.set(0,10,15);
+	light->diffuse_color.set(100,100,100);
+	light->specular_color = light->diffuse_color;
+
+	material = new Material();
+	material->shininess = 6;
+	
 	//load the texture
 	texture = new Texture();
 	if(!texture->load("../res/textures/lee_color_specular.tga"))
@@ -50,7 +68,7 @@ void Application::init(void)
 	}
 
 	//we load a shader
-	shader = Shader::Get("../res/shaders/texture.vs","../res/shaders/texture.fs");
+	shader = Shader::Get("../res/shaders/phong_diffuse.vs","../res/shaders/phong_diffuse.fs");
 
 	//load whatever you need here
 	//......
@@ -71,8 +89,12 @@ void Application::render(void)
 	shader->enable();
 	shader->setMatrix44("model", model_matrix); //upload info to the shader
 	shader->setMatrix44("viewprojection", viewprojection); //upload info to the shader
-
+	shader->setVector3("eye_pos", camera->eye);
+	shader->setVector3("light_amb", ambient_light);
 	shader->setTexture("color_texture", texture, 0 ); //set texture in slot 0
+
+	passLightInfoToShader(light, shader);
+	passMaterialInfoToShader(material, shader);
 
 	//render the data
 	mesh->render(GL_TRIANGLES);
@@ -136,3 +158,16 @@ void Application::start()
 	std::cout << "launching loop..." << std::endl;
 	launchLoop(this);
 }
+
+
+void passLightInfoToShader(Light* light, Shader* shader){
+	shader->setVector3("light_pos", light->position);
+	shader->setVector3("light_dif", light->diffuse_color);
+	shader->setVector3("light_spc", light->specular_color);
+}
+
+
+void passMaterialInfoToShader(Material* material, Shader* shader){
+	shader->setFloat("material_shin", material->shininess);
+}
+
