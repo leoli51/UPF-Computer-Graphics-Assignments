@@ -19,8 +19,6 @@ Shader* diffuse = NULL;
 Shader* specular = NULL;
 Shader* normals = NULL;
 
-int selected_shader = 1;
-
 Texture* texture = NULL;
 Texture* normal_texture = NULL;
 
@@ -84,6 +82,8 @@ void Application::init(void)
 	diffuse = Shader::Get("../res/shaders/phong_diffuse.vs","../res/shaders/phong_diffuse.fs");
 	specular = Shader::Get("../res/shaders/phong_specular.vs", "../res/shaders/phong_specular.fs");
 	normals = Shader::Get("../res/shaders/phong_normals.vs", "../res/shaders/phong_normals.fs");
+
+	shader = diffuse;
 }
 
 //render one frame
@@ -98,18 +98,14 @@ void Application::render(void)
 	Matrix44 viewprojection = camera->getViewProjectionMatrix();
 	
 	//enable the shader
-	switch (selected_shader){
-		case 1: shader = diffuse; break;
-		case 2: shader = specular; break;
-		case 3: shader = normals; shader->setTexture("normal_texture", normal_texture, 1); break; 
-	}
-
 	shader->enable();
 	shader->setMatrix44("model", model_matrix); //upload info to the shader
 	shader->setMatrix44("viewprojection", viewprojection); //upload info to the shader
 	shader->setVector3("eye_pos", camera->eye);
 	shader->setVector3("light_amb", ambient_light);
-	shader->setTexture("color_texture", texture, 0 ); //set texture in slot 0
+	shader->setTexture("color_texture", texture, 0); //set texture in slot 0
+	if (shader == normals)
+		shader->setTexture("normal_texture", normal_texture, 1); 
 
 	passLightInfoToShader(light, shader);
 	passMaterialInfoToShader(material, shader);
@@ -147,14 +143,12 @@ void Application::onKeyPressed( SDL_KeyboardEvent event )
 {
 	//to see all the keycodes: https://wiki.libsdl.org/SDL_Keycode
 	switch (event.keysym.scancode){
-		case SDL_SCANCODE_1: selected_shader = 1;break;
-		case SDL_SCANCODE_2: selected_shader = 2; break;
-		case SDL_SCANCODE_3: selected_shader = 3; break; 
+		case SDL_SCANCODE_1: shader = diffuse; break;
+		case SDL_SCANCODE_2: shader  = specular; break;
+		case SDL_SCANCODE_3: shader = normals; break; 
 		case SDL_SCANCODE_R: Shader::ReloadAll(); break;
         case SDL_SCANCODE_ESCAPE: exit(0); break; //ESC key, kill the app
 	}
-
-	std::cout<<"selected shader : "<<selected_shader<<std::endl;
 
 }
 
