@@ -6,12 +6,16 @@ varying vec3 v_wNormal;
 
 //the texture passed from the application
 uniform sampler2D color_texture;
+uniform sampler2D normal_texture;
 
 uniform vec3 light_pos;
 uniform vec3 light_dif;
 uniform vec3 light_spc;
 uniform vec3 light_amb;
-uniform float material_shin;
+uniform float mat_shin;
+uniform vec3 mat_dif;
+uniform vec3 mat_spc;
+uniform vec3 mat_amb;
 uniform vec3 eye_pos;
 
 void main()
@@ -25,7 +29,7 @@ void main()
 	vec3 V =  normalize(eye_pos - v_wPos);
 	float LdotN = max(0.0, dot(L, N));
 	float RdotV = max(0.0, dot(R, V));
-	RdotV = pow(RdotV, material_shin);
+	RdotV = pow(RdotV, mat_shin);
 
     float dst_squared = /* distance(eye_pos, v_wPos) +*/ distance(v_wPos, light_pos);
     dst_squared = dst_squared * dst_squared;
