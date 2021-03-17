@@ -2,9 +2,9 @@
 //this var comes from the vertex shader
 varying vec2 v_coord;
 varying vec3 v_wPos;
-varying vec3 v_wNormal;
 
 //the texture passed from the application
+uniform mat4 model;
 uniform sampler2D color_texture;
 uniform sampler2D normal_texture;
 
@@ -18,13 +18,24 @@ uniform vec3 mat_spc;
 uniform vec3 mat_amb;
 uniform vec3 eye_pos;
 
+const vec3 normal_min = vec3(-1.0,-1.0,-1.0);
+const vec3 normal_max = vec3(1.0,1.0,1.0);
+
 void main()
 {
+
 	//read the pixel RGBA from the texture at the position v_coord
-	vec4 material_color = texture2D( color_texture, v_coord );
+	vec4 texture_color = texture2D( color_texture, v_coord );
+	vec3 normal = texture2D(normal_texture, v_coord).xyz;
+
+	// rotate the normals!!! use model matrix
+	normal = mix(normal_min, normal_max, normal);
+	normal = (model * vec4(normal, 0.0)).xyz;
+
+
     //calculate vector
 	vec3 L = normalize(light_pos - v_wPos);
-	vec3 N = normalize(v_wNormal);
+	vec3 N = normalize(normal);
 	vec3 R = normalize(reflect(-L, N));
 	vec3 V =  normalize(eye_pos - v_wPos);
 	float LdotN = max(0.0, dot(L, N));
@@ -34,11 +45,11 @@ void main()
     float dst_squared = /* distance(eye_pos, v_wPos) +*/ distance(v_wPos, light_pos);
     dst_squared = dst_squared * dst_squared;
 
-	vec3 amb = light_amb * material_color.xyz;
-	vec3 dif = light_dif / dst_squared  * LdotN * material_color.xyz;
+	vec3 amb = light_amb * texture_color.xyz * mat_amb;
+	vec3 dif = light_dif / dst_squared  * LdotN * texture_color.xyz * mat_dif;
 
-    vec3 Ks = material_color.xyz * material_color.w;
-	vec3 spc = light_spc / dst_squared * RdotV * Ks;
+    vec3 Ks = texture_color.xyz * texture_color.w;
+	vec3 spc = light_spc / dst_squared * RdotV * Ks * mat_spc;
 
 	//compute color
 	vec3 color = amb + dif + spc;
