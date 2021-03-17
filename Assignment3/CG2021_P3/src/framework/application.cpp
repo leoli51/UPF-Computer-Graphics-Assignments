@@ -48,7 +48,16 @@ void Application::init(void)
 
 	//load the texture
 	texture = new Image();
-	texture->loadTGA("color.tga");
+	if (!texture->loadTGA("lee_color_specular.tga")) {
+		std::cout << "Texture not found" << std::endl;
+		exit(1);
+	}
+
+	normal = new Image();
+	if (!normal->loadTGA("lee_normal.tga")) {
+		std::cout << "Texture not found" << std::endl;
+		exit(1);
+	}
 }
 
 //render one frame
@@ -58,8 +67,8 @@ void Application::render(Image& framebuffer)
 
 	//set zbuffer
 	float max_depth = -(camera->far_plane + 1);
-	for (int x = 0; x < zbuffer.width; x++){
-		for (int y = 0; y < zbuffer.height; y++){
+	for (int x = 0; x < zbuffer.width; x++) {
+		for (int y = 0; y < zbuffer.height; y++) {
 			//give a huge number
 			zbuffer.setPixel(x, y, max_depth);
 		}
@@ -70,93 +79,144 @@ void Application::render(Image& framebuffer)
 	Vector3 light_spc(0.6f, 0.6f, 0.6f);
 	Vector3 light_amb(0.1, 0.1, 0.1);
 
-	// set material
-	Vector3 material_dif(1, 1, 1);
-	Vector3 material_spc(1, 1, 1);
-	Vector3 material_amb(1, 1, 1);
-	float material_shin = 30.0;
-
 	// set up
 	Vector3 eye_pos = camera->eye;
 	Matrix44 model_matrix;
 	model_matrix.setIdentity();
-	Matrix44 T;
-	T.setTranslation(0, 0, 0);
-	model_matrix = model_matrix * T;
+	model_matrix.traslate(0, 0, 0);
 	Matrix44 viewprojection = camera->getViewProjectionMatrix();
 
 	// start illumination
 	for (int i = 0; i < mesh->vertices.size(); i += 3)
 	{
-		Vector3 v0 = mesh->vertices[i]; //extract vertex from mesh
-		Vector3 v1 = mesh->vertices[i + 1]; //extract vertex from mesh
-		Vector3 v2 = mesh->vertices[i + 2]; //extract vertex from mesh
-		Vector3 v0_normal(v0.y, -v0.x, 0);
-		Vector3 v1_normal(v1.y, -v1.x, 0);
-		Vector3 v2_normal(v2.y, -v2.x, 0);
+		Vector3 p0 = mesh->vertices[i]; //extract vertex from mesh
+		Vector3 p1 = mesh->vertices[i + 1]; //extract vertex from mesh
+		Vector3 p2 = mesh->vertices[i + 2]; //extract vertex from mesh
+
+		Vector3 v0 = camera->projectVector(p0);
+		Vector3 v1 = camera->projectVector(p1);
+		Vector3 v2 = camera->projectVector(p2);
+
+		//convert from normalized (-1 to +1) to framebuffer coordinates (0,W)
+		v0.x = (v0.x + 1.0) / 2.0 * framebuffer.width;
+		v1.x = (v1.x + 1.0) / 2.0 * framebuffer.width;
+		v2.x = (v2.x + 1.0) / 2.0 * framebuffer.width;
+		v0.y = (v0.y + 1.0) / 2.0 * framebuffer.height;
+		v1.y = (v1.y + 1.0) / 2.0 * framebuffer.height;
+		v2.y = (v2.y + 1.0) / 2.0 * framebuffer.height;
+
+		// get normal
+		Vector3 v0_normal((float)normal->getPixel(mesh->uvs[i].normalize().x * normal->width, mesh->uvs[i].y * normal->height).r / 255, (float)normal->getPixel(mesh->uvs[i].x, mesh->uvs[i].y).g / 255, (float)normal->getPixel(mesh->uvs[i].x, mesh->uvs[i].y).b / 255);
+		Vector3 v1_normal((float)normal->getPixel(mesh->uvs[i + 1].x * normal->width, mesh->uvs[i + 1].y * normal->height).r / 255, (float)normal->getPixel(mesh->uvs[i + 1].x * normal->width, mesh->uvs[i + 1].y * normal->height).g / 255, (float)normal->getPixel(mesh->uvs[i + 1].x * normal->width, mesh->uvs[i + 1].y * normal->height).b / 255);
+		Vector3 v2_normal((float)normal->getPixel(mesh->uvs[i + 2].x * normal->width, mesh->uvs[i + 2].y * normal->height).r / 255, (float)normal->getPixel(mesh->uvs[i + 2].x * normal->width, mesh->uvs[i + 2].y * normal->height).g / 255, (float)normal->getPixel(mesh->uvs[i + 2].x * normal->width, mesh->uvs[i + 2].y * normal->height).b / 255);
+
+		// convert from -1,1 to 0,1
+		v0_normal.set(v0_normal.x * 0.5 + 0.5, v0_normal.y * 0.5 + 0.5, v0_normal.z * 0.5 + 0.5);
+		v1_normal.set(v1_normal.x * 0.5 + 0.5, v1_normal.y * 0.5 + 0.5, v1_normal.z * 0.5 + 0.5);
+		v2_normal.set(v2_normal.x * 0.5 + 0.5, v2_normal.y * 0.5 + 0.5, v2_normal.z * 0.5 + 0.5);
+
+		// compute color texture
+		Vector3 texture0((float)texture->getPixel(mesh->uvs[i].x * texture->width, mesh->uvs[i].y * texture->height).r / 255, (float)texture->getPixel(mesh->uvs[i].x * texture->width, mesh->uvs[i].y * texture->height).g / 255, (float)texture->getPixel(mesh->uvs[i].x * texture->width, mesh->uvs[i].y * texture->height).b / 255);
+		Vector3 texture1((float)texture->getPixel(mesh->uvs[i + 1].x * texture->width, mesh->uvs[i + 1].y * texture->height).r / 255, (float)texture->getPixel(mesh->uvs[i + 1].x * texture->width, mesh->uvs[i + 1].y * texture->height).g / 255, (float)texture->getPixel(mesh->uvs[i + 1].x * texture->width, mesh->uvs[i + 1].y * texture->height).b / 255);
+		Vector3 texture2((float)texture->getPixel(mesh->uvs[i + 2].x * texture->width, mesh->uvs[i + 2].y * texture->height).r / 255, (float)texture->getPixel(mesh->uvs[i + 2].x * texture->width, mesh->uvs[i + 2].y * texture->height).g / 255, (float)texture->getPixel(mesh->uvs[i + 2].x * texture->width, mesh->uvs[i + 2].y * texture->height).b / 255);
+
 		//convert local coordinate to world coordinates
-		Vector3 wPos_0 = (model_matrix * Vector4(v0.x, v0.y, v0.z, 1.0)).getVector3();
-		Vector3 wPos_1 = (model_matrix * Vector4(v1.x, v1.y, v1.z, 1.0)).getVector3();
-		Vector3 wPos_2 = (model_matrix * Vector4(v2.x, v2.y, v2.z, 1.0)).getVector3();
-		//convert local normal to world coordinates
-		Vector3 wNormal_0 = (model_matrix * Vector4(v0_normal.x, v0_normal.y, v0_normal.z, 1.0)).getVector3();
-		Vector3 wNormal_1 = (model_matrix * Vector4(v1_normal.x, v1_normal.y, v1_normal.z, 1.0)).getVector3();
-		Vector3 wNormal_2 = (model_matrix * Vector4(v2_normal.x, v2_normal.y, v2_normal.z, 1.0)).getVector3();
+		Vector3 wPos_0 = (model_matrix * Vector4(p0.x, p0.y, p0.z, 1.0)).getVector3();
+		Vector3 wPos_1 = (model_matrix * Vector4(p1.x, p1.y, p1.z, 1.0)).getVector3();
+		Vector3 wPos_2 = (model_matrix * Vector4(p2.x, p2.y, p2.z, 1.0)).getVector3();
+
+		Vector3 L0(light_pos - wPos_0); L0.normalize();
+		Vector3 L1(light_pos - wPos_1); L1.normalize();
+		Vector3 L2(light_pos - wPos_2); L2.normalize();
+
+		Vector3 N0 = v0_normal.normalize();
+		Vector3 N1 = v1_normal.normalize();
+		Vector3 N2 = v2_normal.normalize();
+
+
+		Vector3 V0(eye_pos - wPos_0); V0.normalize();
+		Vector3 V1(eye_pos - wPos_1); V1.normalize();
+		Vector3 V2(eye_pos - wPos_2); V2.normalize();
+
+		float LdotN_0 = clamp(L0.dot(N0), 0, 1);
+		float LdotN_1 = clamp(L1.dot(N1), 0, 1);
+		float LdotN_2 = clamp(L2.dot(N2), 0, 1);
+
+		Vector3 R0(-L0.x - 2 * (-L0.dot(N0)) * N0.x, -L0.y - 2 * (-L0.dot(N0)) * N0.y, -L0.z - 2 * (-L0.dot(N0)) * N0.z); R0.normalize();
+		Vector3 R1(-L1.x - 2 * (-L1.dot(N1)) * N1.x, -L1.y - 2 * (-L1.dot(N1)) * N1.y, -L1.z - 2 * (-L1.dot(N1)) * N1.z); R1.normalize();
+		Vector3 R2(-L2.x - 2 * (-L2.dot(N2)) * N2.x, -L2.y - 2 * (-L2.dot(N2)) * N2.y, -L2.z - 2 * (-L2.dot(N2)) * N2.z); R2.normalize();
+
+		float meterial_shin = 30;
+
+		float RdotV_0 = clamp(R0.dot(V0), 0, 1); RdotV_0 = pow(RdotV_0, 30);
+		float RdotV_1 = clamp(R1.dot(V1), 0, 1); RdotV_1 = pow(RdotV_1, 30);
+		float RdotV_2 = clamp(R2.dot(V2), 0, 1); RdotV_2 = pow(RdotV_2, 30);
 
 		//project the vertex by the model view projection 
 		Vector4 Position_0 = viewprojection * Vector4(wPos_0.x, wPos_0.y, wPos_0.z, 1.0);
 		Vector4 Position_1 = viewprojection * Vector4(wPos_1.x, wPos_1.y, wPos_1.z, 1.0);
 		Vector4 Position_2 = viewprojection * Vector4(wPos_2.x, wPos_2.y, wPos_2.z, 1.0);
 
-		Vector3 L0(light_pos - wPos_0); L0.normalize();
-		Vector3 L1(light_pos - wPos_1); L1.normalize();
-		Vector3 L2(light_pos - wPos_2); L2.normalize();
-		
-		Vector3 N0 = wNormal_0.normalize();
-		Vector3 N1 = wNormal_1.normalize();
-		Vector3 N2 = wNormal_2.normalize();
-		
-		//Vector3 R = normalize(reflect(-L, N));
-
-		Vector3 V0(eye_pos - wPos_0); V0.normalize();
-		Vector3 V1(eye_pos - wPos_0); V0.normalize();
-		Vector3 V2(eye_pos - wPos_0); V0.normalize();
-
-
-		float LdotN_0 = max(0.0, L0.dot(N0));
-		float LdotN_1 = max(0.0, L1.dot(N1));
-		float LdotN_2 = max(0.0, L2.dot(N2));
-		//float RdotV = max(0.0, R0.dot(V0));
-		//RdotV = pow(RdotV, material_shin);
-
-		float dst_squared_0 = wPos_0.distance(light_pos);
+		/*float dst_squared_0 = wPos_0.distance(light_pos);
 		float dst_squared_1 = wPos_1.distance(light_pos);
-		float dst_squared_2 = wPos_2.distance(light_pos);
+		float dst_squared_2 = wPos_2.distance(light_pos);*/
 
-		dst_squared_0 = dst_squared_0 * dst_squared_0;
-		dst_squared_1 = dst_squared_1 * dst_squared_1;
-		dst_squared_2 = dst_squared_2 * dst_squared_2;
+		//dst_squared_0 = dst_squared_0 * dst_squared_0;
+		//dst_squared_1 = dst_squared_1 * dst_squared_1;
+		//dst_squared_2 = dst_squared_2 * dst_squared_2;
 
-		Vector3 amb(light_amb.x * material_amb.x, light_amb.y * material_amb.y, light_amb.z * material_amb.z);
+		Vector3 amb_0(light_amb.x * texture0.x, light_amb.y * texture0.y, light_amb.z * texture0.z);
+		Vector3 amb_1(light_amb.x * texture1.x, light_amb.y * texture1.y, light_amb.z * texture1.z);
+		Vector3 amb_2(light_amb.x * texture2.x, light_amb.y * texture2.y, light_amb.z * texture2.z);
 
-		Vector3 dif_0(light_dif.x / dst_squared_0 * LdotN_0 * material_dif.x, light_dif.y / dst_squared_0 * LdotN_0 * material_dif.y, light_dif.z / dst_squared_0 * LdotN_0 * material_dif.z);
-		Vector3 dif_1(light_dif.x / dst_squared_1 * LdotN_1 * material_dif.x, light_dif.y / dst_squared_1 * LdotN_1 * material_dif.y, light_dif.z / dst_squared_1 * LdotN_1 * material_dif.z);
-		Vector3 dif_2(light_dif.x / dst_squared_2 * LdotN_2 * material_dif.x, light_dif.y / dst_squared_2 * LdotN_2 * material_dif.y, light_dif.z / dst_squared_2 * LdotN_2 * material_dif.z);
-		
-		//Vector3 spc = light_spc / dst_squared * RdotV * material_spc;
+		Vector3 dif_0(light_dif.x * LdotN_0 * texture0.x, light_dif.y * LdotN_0 * texture0.y, light_dif.z * LdotN_0 * texture0.z);
+		Vector3 dif_1(light_dif.x * LdotN_1 * texture1.x, light_dif.y * LdotN_1 * texture1.y, light_dif.z * LdotN_1 * texture1.z);
+		Vector3 dif_2(light_dif.x * LdotN_2 * texture2.x, light_dif.y * LdotN_2 * texture2.y, light_dif.z * LdotN_2 * texture2.z);
+
+		Vector3 spc_0(light_dif.x * RdotV_0 * texture0.x, light_dif.y * RdotV_0 * texture0.y, light_dif.z * RdotV_0 * texture0.z);
+		Vector3 spc_1(light_dif.x * RdotV_1 * texture1.x, light_dif.y * RdotV_1 * texture1.y, light_dif.z * RdotV_1 * texture1.z);
+		Vector3 spc_2(light_dif.x * RdotV_2 * texture2.x, light_dif.y * RdotV_2 * texture2.y, light_dif.z * RdotV_2 * texture2.z);
 
 		//compute color
-		Vector3 color0 = amb + dif_0; //+ spc;
-		Vector3 color1 = amb + dif_1; //+ spc;
-		Vector3 color2 = amb + dif_2; //+ spc;
+		Vector3 color0 = amb_0 + dif_0 + spc_0;
+		Vector3 color1 = amb_1 + dif_1 + spc_1;
+		Vector3 color2 = amb_2 + dif_2 + spc_2;
 
-		//set the ouput color por the pixel
-		Vector4 FragColor0 = Vector4(color0.x, color0.y, color0.z, 1.0);
-		Vector4 FragColor1 = Vector4(color1.x, color1.y, color1.z, 1.0);
-		Vector4 FragColor2 = Vector4(color2.x, color2.y, color2.z, 1.0);
+		Color fragcolor0(color0.x * 255, color0.y * 255, color0.z * 255);
+		Color fragcolor1(color1.x * 255, color1.y * 255, color1.z * 255);
+		Color fragcolor2(color2.x * 255, color2.y * 255, color2.z * 255);
 
-		framebuffer.fillTriangleWithColor(Position_0.getVector3(), Position_1.getVector3(), Position_2.getVector3(), FragColor0.getVector3(), FragColor1.getVector3(), FragColor2.getVector3(), zbuffer);
+		int min_x = (std::min)((std::min)(v0.x, v1.x), v2.x);
+		int max_x = (std::max)((std::max)(v0.x, v1.x), v2.x);
+		int min_y = (std::min)((std::min)(v0.y, v1.y), v2.y);
+		int max_y = (std::max)((std::max)(v0.y, v1.y), v2.y);
 
+
+		Vector3 p;
+	for (int x = min_x; x <= max_x; x++) {
+		for (int y = min_y; y <= max_y; y++){
+				//assuming p0,p1 and p2 are the vertices 2D
+				p.set(x, y, 0);
+				Vector3 bc = barycentricCoordinates(p, v0, v1, v2);
+				p.z = v0.z * bc.x + v1.z * bc.y + v2.z * bc.z;
+
+				//use weights to compute final color
+				Color finalcolor = fragcolor0 * bc.x + fragcolor1 * bc.y + fragcolor2 * bc.z;
+
+				// check if pixel uv is in coordinate range
+				if (bc.x < 0 || bc.y < 0 || bc.z < 0)
+					continue;
+				// check if pixel is out of view
+				if (p.z > 0 || p.x >= window_width || p.x < 0 || p.y >= window_height || p.y < 0)
+					continue;
+				// check if it occludes a pixel that is more in front
+				if (p.z >= zbuffer.getPixel(p.x, p.y)) {
+					zbuffer.setPixel(p.x, p.y, p.z);
+					// scale coords and set pixel
+					framebuffer.setPixel(p.x, p.y, finalcolor);
+				}
+			}
+		}
 
 	}
 

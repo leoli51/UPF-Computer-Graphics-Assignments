@@ -26,6 +26,8 @@ public:
 	Mesh* mesh = NULL;
 	Camera* camera = NULL;
 	Image* texture = NULL;
+	Image* normal = NULL;
+	Image* fill = NULL;
 
 	//keyboard state
 	const Uint8* keystate;

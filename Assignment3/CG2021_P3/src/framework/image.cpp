@@ -462,27 +462,18 @@ void Image::fillTriangleWithColor(Vector3 p0, Vector3 p1, Vector3 p2, Color& col
 }
 
 void Image::fillTriangleWithTexture(Vector3 p0, Vector3 p1, Vector3 p2, Vector2 uv0, Vector2 uv1, Vector2 uv2, const Image& texture, FloatImage& zbuffer){
+	
+	int min_x = (std::min)((std::min)(p0.x, p1.x), p2.x);
+	int max_x = (std::max)((std::max)(p0.x, p1.x), p2.x);
 	int min_y = (std::min)((std::min)(p0.y, p1.y), p2.y);
 	int max_y = (std::max)((std::max)(p0.y, p1.y), p2.y);
 
-	int table_height = max_y - min_y + 1;
-
-	std::vector<Cells> table(table_height);
-	for (int i = 0; i < table.size(); i++) {
-		table[i].minx = 100000; //very big number todo: change to std::numeric_limits<int>.max()...
-		table[i].maxx = -100000; //very small number
-	}
-	
-	// fill table
-	fillActiveEdgesTable(p0.x, p0.y, p1.x, p1.y, min_y, max_y, table);
-	fillActiveEdgesTable(p1.x, p1.y, p2.x, p2.y, min_y, max_y, table);
-	fillActiveEdgesTable(p2.x, p2.y, p0.x, p0.y, min_y, max_y, table);
 
 	Vector3 p;
-	for (int py = min_y; py <= max_y; py++){
-		for (int px = table[py - min_y].minx; px <= table[py - min_y].maxx; px++){
+	for (int x = min_x; x <= max_x; x++) {
+		for (int y = min_y; y <= max_y; y++){
 			//assuming p0,p1 and p2 are the vertices 2D
-			p.set(px, py, 0);
+			p.set(x, y, 0);
 			Vector3 bc = barycentricCoordinates(p, p0, p1, p2);
 			p.z = p0.z * bc.x + p1.z * bc.y + p2.z * bc.z;
 
